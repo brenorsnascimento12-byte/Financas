@@ -1,0 +1,71 @@
+/* Paleta validada com o validador de data-viz: todos os checks PASS em light e dark. */
+
+:root {
+  color-scheme: light;
+
+  --surface-1: #fcfcfb;
+  --plane: #f9f9f7;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --gridline: #e1e0d9;
+  --baseline: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.1);
+  --wash: rgba(11, 11, 11, 0.04);
+
+  --serie-1: #2a78d6; /* Essenciais */
+  --serie-2: #eb6834; /* Não essenciais */
+  --serie-3: #1baf7a; /* Poupança */
+
+  --good: #0ca30c;
+  --success-text: #006300;
+  --warning: #fab219;
+  --critical: #d03b3b;
+
+  --raio: 10px;
+  --sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+/* Os valores dark são os mesmos oito matizes reescalonados para a superfície escura,
+   não uma inversão automática. Declarados nos dois âmbitos: o media query cobre a
+   definição do sistema, o data-theme cobre o botão de tema e tem de ganhar nos dois sentidos. */
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme='light'])) {
+    color-scheme: dark;
+
+    --surface-1: #1a1a19;
+    --plane: #0d0d0d;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --gridline: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255, 255, 255, 0.1);
+    --wash: rgba(255, 255, 255, 0.06);
+
+    --serie-1: #3987e5;
+    --serie-2: #d95926;
+    --serie-3: #199e70;
+
+    --success-text: #0ca30c;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --surface-1: #1a1a19;
+  --plane: #0d0d0d;
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted: #898781;
+  --gridline: #2c2c2a;
+  --baseline: #383835;
+  --border: rgba(255, 255, 255, 0.1);
+  --wash: rgba(255, 255, 255, 0.06);
+
+  --serie-1: #3987e5;
+  --serie-2: #d95926;
+
+  --success-text: #0ca30c;
+}

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#1a1a19" />
+  <!-- Conteúdo dentro da zona segura de 80% exigida pelos ícones maskable. -->
+  <path
+    d="M150 330 L226 271 L282 306 L364 198"
+    fill="none"
+    stroke="#3987e5"
+    stroke-width="26"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <circle cx="364" cy="198" r="20" fill="#3987e5" />
+</svg>
