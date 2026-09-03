@@ -10,7 +10,7 @@ import {
 } from '../lib/orcamento'
 import { ObjetivoECascata } from './ObjetivoECascata'
 import { novoId } from '../lib/armazenamento'
-import { brlFmt, dataCurta, eur, pct } from '../lib/formato'
+import { dataCurta, eur, pct } from '../lib/formato'
 import { GraficoPatrimonio } from './GraficoPatrimonio'
 
 interface Props {
@@ -31,7 +31,6 @@ export function Patrimonio({ orcamento, aoMudar }: Props) {
   const [investido, setInvestido] = useState('')
   const [liquidez, setLiquidez] = useState('')
   const [certificados, setCertificados] = useState('')
-  const [brl, setBrl] = useState('')
   const [dataSaldo, setDataSaldo] = useState(hojeISO())
 
   const [valorAporte, setValorAporte] = useState('')
@@ -47,14 +46,13 @@ export function Patrimonio({ orcamento, aoMudar }: Props) {
   const registarSaldo = (e: React.FormEvent) => {
     e.preventDefault()
     const num = (v: string) => Number(v.replace(',', '.')) || 0
-    if (investido === '' && liquidez === '' && certificados === '' && brl === '') return
+    if (investido === '' && liquidez === '' && certificados === '') return
     const novo: Saldo = {
       id: novoId(),
       data: dataSaldo,
       investido: num(investido),
       liquidez: num(liquidez),
       certificados: num(certificados),
-      brl: num(brl),
     }
     // Uma data só tem uma fotografia: registar de novo substitui.
     const semRepetida = orcamento.saldos.filter((s) => s.data !== dataSaldo)
@@ -62,7 +60,6 @@ export function Patrimonio({ orcamento, aoMudar }: Props) {
     setInvestido('')
     setLiquidez('')
     setCertificados('')
-    setBrl('')
   }
 
   const registarAporte = (e: React.FormEvent) => {
@@ -119,11 +116,6 @@ export function Patrimonio({ orcamento, aoMudar }: Props) {
                     {orcamento.compromissos.map((c) => `${c.nome}: ${eur(c.valor)}`).join(' · ')}
                   </span>
                 )}
-              </div>
-              <div className="pote" style={{ borderTopColor: 'var(--text-muted)' }}>
-                <span className="rotulo">Reserva em reais</span>
-                <span className="valor">{brlFmt(atual.brl)}</span>
-                <span className="sub">fora do património em euros, para gastar no Brasil</span>
               </div>
             </div>
 
@@ -205,21 +197,6 @@ export function Patrimonio({ orcamento, aoMudar }: Props) {
               </div>
               <span className="dica">Certificados de Aforro, no IGCP</span>
             </div>
-            <div className="campo">
-              <label htmlFor="saldo-brl">Reserva em reais</label>
-              <div className="campo-entrada">
-                <input
-                  id="saldo-brl"
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="0"
-                  value={brl}
-                  onChange={(e) => setBrl(e.target.value)}
-                />
-                <span className="sufixo">R$</span>
-              </div>
-              <span className="dica">Não entra no total em euros</span>
-            </div>
           </div>
           <div className="registo-linha">
             <div className="campo-entrada">
@@ -243,7 +220,7 @@ export function Patrimonio({ orcamento, aoMudar }: Props) {
       <section className="cartao">
         <h2>Transferência mensal · {eur(planeados.reduce((s, a) => s + a.valor, 0))}</h2>
         <p className="rodape" style={{ marginBottom: 12 }}>
-          O que sai de propósito para poupar. Os potes registam-se em Excedentes.
+          O que sai de propósito para poupar. O pote de excedente regista-se em Excedentes.
         </p>
         <form className="registo" onSubmit={registarAporte}>
           <div className="registo-linha">

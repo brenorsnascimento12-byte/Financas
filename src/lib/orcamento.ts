@@ -54,7 +54,7 @@ export function mesesCobertos(despesas: Despesa[]): string[] {
 /**
  * Resumo mês a mês. Cada mês é independente: os 50 e os 30 são tetos daquele mês,
  * não verbas que transitam. O que sobra vira excedente e vai para os potes, onde
- * espera decisão — ver `calcularPotes`.
+ * espera decisão — ver `calcularPote`.
  */
 export function resumirMeses(o: Orcamento): ResumoMes[] {
   const porFatia = new Map<string, Fonte>()
@@ -111,32 +111,27 @@ export function resumirMeses(o: Orcamento): ResumoMes[] {
 }
 
 /**
- * Potes de excedente, um por fatia. Acumulam os excedentes dos meses já fechados
- * — um mês acima do teto entra negativo e faz o pote descer sozinho, que é o que
- * dispensa registar despesas como decisões. As decisões são só saídas.
+ * Pote de excedente, um só. Acumula o que sobrou de todos os tetos nos meses já
+ * fechados — um mês acima do teto entra negativo e faz o pote descer sozinho, e a
+ * folga de uma fatia compensa o estouro da outra sem ser preciso mexer em nada.
  */
-export function calcularPotes(resumos: ResumoMes[], aportes: Aporte[]): Record<Fonte, Pote> {
+export function calcularPote(resumos: ResumoMes[], aportes: Aporte[]): Pote {
   const fechados = resumos.filter((r) => r.fechado)
   const emCurso = resumos.find((r) => !r.fechado)
 
-  const construir = (acumulado: number, emCursoValor: number, fonte: Fonte): Pote => {
-    const decidido = aportes.filter((a) => a.fonte === fonte).reduce((s, a) => s + a.valor, 0)
-    const porDecidir = acumulado - decidido
-    return { acumulado, decidido, porDecidir, projetado: porDecidir + emCursoValor }
-  }
+  const acumulado = fechados.reduce(
+    (s, r) => s + r.excedenteEssencial + r.excedenteNaoEssencial,
+    0,
+  )
+  const decidido = aportes
+    .filter((a) => a.fonte === 'excedente')
+    .reduce((s, a) => s + a.valor, 0)
+  const porDecidir = acumulado - decidido
+  const doMesEmCurso = emCurso
+    ? emCurso.excedenteEssencial + emCurso.excedenteNaoEssencial
+    : 0
 
-  return {
-    essencial: construir(
-      fechados.reduce((s, r) => s + r.excedenteEssencial, 0),
-      emCurso?.excedenteEssencial ?? 0,
-      'essencial',
-    ),
-    naoEssencial: construir(
-      fechados.reduce((s, r) => s + r.excedenteNaoEssencial, 0),
-      emCurso?.excedenteNaoEssencial ?? 0,
-      'naoEssencial',
-    ),
-  }
+  return { acumulado, decidido, porDecidir, projetado: porDecidir + doMesEmCurso }
 }
 
 /** Média móvel dos últimos n meses fechados, para detetar deriva do gasto. */
@@ -187,9 +182,14 @@ export const objetivoComData = (o: Orcamento): Objetivo | undefined =>
   o.objetivos.find((ob) => ob.valorAlvo !== undefined && ob.dataAlvo !== undefined)
 
 /**
- * Progresso de um objetivo com alvo e data. O saldo em Certificados é o que conta:
- * é para lá que a cascata encaminha este dinheiro, por ser valor previsível a prazo
- * curto — dinheiro com data marcada não pertence a um ativo volátil.
+ * Progresso de um objetivo com alvo e data.
+ *
+ * Conta os Certificados mais a liquidez que sobra depois de descontar o que já tem
+ * dono: os compromissos e a almofada. Contar a liquidez toda inflacionaria o
+ * progresso com dinheiro que não está disponível para o objetivo.
+ *
+ * Os ETFs ficam de fora de propósito: dinheiro com data marcada não pertence a um
+ * ativo volátil.
  */
 export function progressoObjetivo(o: Orcamento, objetivo: Objetivo): ProgressoObjetivo | null {
   if (objetivo.valorAlvo === undefined || objetivo.dataAlvo === undefined) return null
@@ -197,10 +197,12 @@ export function progressoObjetivo(o: Orcamento, objetivo: Objetivo): ProgressoOb
   const alvo = objetivo.valorAlvo
   const saldo = ultimoSaldo(o)
   const aportesCertificados = o.aportes.filter((a) => a.destino === 'certificados')
-  // Se já há fotografia, vale o saldo real (inclui juros). Senão, o que foi aportado.
-  const atual = saldo
-    ? saldo.certificados
-    : aportesCertificados.reduce((s, a) => s + a.valor, 0)
+  // Sem fotografia não há saldos que valham: o progresso fica a zero em vez de ser
+  // adivinhado a partir dos aportes, que não sabem de juros nem do estado da conta.
+  const liquidezDisponivel = saldo
+    ? Math.max(0, saldo.liquidez - totalComprometido(o) - o.almofadaAlvo)
+    : 0
+  const atual = saldo ? saldo.certificados + liquidezDisponivel : 0
 
   const falta = Math.max(0, alvo - atual)
   const mesesRestantes = Math.max(0, mesesEntre(mesAtual(), objetivo.dataAlvo))

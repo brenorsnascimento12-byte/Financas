@@ -37,15 +37,22 @@ export type Fonte = 'essencial' | 'naoEssencial'
  */
 export type Destino = 'investimento' | 'liquidez' | 'certificados'
 
-/** 'planeado' é a transferência mensal recorrente; as outras vêm dos potes. */
-export type FonteAporte = 'planeado' | Fonte
+/**
+ * 'planeado' é a transferência mensal recorrente; 'excedente' é uma saída do pote.
+ *
+ * O pote é um só: separar excedente de essenciais e de não essenciais não mudava
+ * nenhuma decisão (a cascata não distingue a origem) e deixava um pote positivo ao
+ * lado de outro negativo sem os deixar compensarem-se. O detalhe por fatia continua
+ * a existir mês a mês, na tabela de origem.
+ */
+export type FonteAporte = 'planeado' | 'excedente'
 
 /**
  * Dinheiro efetivamente transferido para investimento, liquidez ou certificados.
  * É isto que conta como poupança — não o que sobra na conta ao fim do mês.
  *
- * Os aportes com fonte 'essencial' ou 'naoEssencial' são saídas dos potes. As
- * despesas nunca se registam aqui: consomem o pote pela via do mês acima do teto.
+ * Os aportes com fonte 'excedente' são saídas do pote. As despesas nunca se
+ * registam aqui: consomem o pote pela via do mês acima do teto.
  */
 export interface Aporte {
   id: string
@@ -66,11 +73,6 @@ export interface Saldo {
   liquidez: number
   /** Certificados de Aforro (IGCP). Crescem por juros, que aparecem como mercado. */
   certificados: number
-  /**
-   * Reserva em reais. Fica fora do património em euros de propósito: destina-se
-   * a ser gasta no Brasil sem conversão, e converter só acrescentaria ruído cambial.
-   */
-  brl: number
 }
 
 /** Parte da liquidez que já tem dono e não deve contar como disponível. */
@@ -140,7 +142,7 @@ export interface ResumoMes {
   fechado: boolean
 }
 
-/** Excedente acumulado de uma fatia, e quanto dele ainda espera decisão. */
+/** Excedente acumulado de todas as fatias, e quanto dele ainda espera decisão. */
 export interface Pote {
   acumulado: number
   decidido: number

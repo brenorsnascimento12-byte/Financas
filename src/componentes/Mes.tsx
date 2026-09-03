@@ -171,7 +171,7 @@ export function Mes({
           {resumo.poupancaDeExcedente > 0 && resumo.poupancaPlaneada > 0 && (
             <p className="rodape" style={{ marginTop: 14 }}>
               {eur(resumo.poupancaPlaneada)} de transferência mensal +{' '}
-              {eur(resumo.poupancaDeExcedente)} vindos dos potes.
+              {eur(resumo.poupancaDeExcedente)} vindos do pote de excedente.
             </p>
           )}
         </section>

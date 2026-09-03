@@ -1,4 +1,4 @@
-import type { Aporte, Orcamento } from '../types'
+import type { Aporte, Orcamento, Saldo } from '../types'
 import { mesAtual } from './orcamento'
 
 const CHAVE = 'financas:estado:v2'
@@ -90,12 +90,16 @@ function migrar(guardado: Partial<Orcamento> | undefined): Orcamento {
   if (!Array.isArray(orcamento.compromissos)) orcamento.compromissos = []
   if (!Array.isArray(orcamento.revisoes)) orcamento.revisoes = []
   if (typeof orcamento.almofadaAlvo !== 'number') orcamento.almofadaAlvo = base.almofadaAlvo
-  // Fotografias antigas não tinham certificados nem reserva em reais.
-  orcamento.saldos = orcamento.saldos.map((s) => ({
-    ...s,
-    certificados: typeof s.certificados === 'number' ? s.certificados : 0,
-    brl: typeof s.brl === 'number' ? s.brl : 0,
-  }))
+  // Fotografias antigas não tinham certificados; a reserva em reais foi removida.
+  orcamento.saldos = orcamento.saldos.map((s) => {
+    const { brl: _brl, ...resto } = s as Saldo & { brl?: number }
+    return { ...resto, certificados: typeof s.certificados === 'number' ? s.certificados : 0 }
+  })
+  // Os potes por fatia fundiram-se num só: a fonte da saída deixou de distinguir
+  // de que fatia veio o excedente.
+  orcamento.aportes = orcamento.aportes.map((ap) =>
+    ap.fonte === 'planeado' ? ap : { ...ap, fonte: 'excedente' as const },
+  )
   // A chave antiga não fica a viver para sempre nas exportações.
   delete (orcamento as Partial<Orcamento> & { decisoes?: unknown }).decisoes
   return orcamento

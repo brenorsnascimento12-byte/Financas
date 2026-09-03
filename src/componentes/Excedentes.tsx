@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import type { Aporte, Destino, Fonte, Orcamento, Pote, ResumoMes } from '../types'
-import { calcularPotes, hojeISO, nomeMes } from '../lib/orcamento'
+import type { Aporte, Destino, Orcamento, ResumoMes } from '../types'
+import { calcularPote, hojeISO, nomeMes } from '../lib/orcamento'
 import { novoId } from '../lib/armazenamento'
 import { eur } from '../lib/formato'
 
@@ -8,11 +8,6 @@ interface Props {
   orcamento: Orcamento
   resumos: ResumoMes[]
   aoMudar: (patch: Partial<Orcamento>) => void
-}
-
-const NOME_FONTE: Record<Fonte, string> = {
-  essencial: 'Essenciais',
-  naoEssencial: 'Não essenciais',
 }
 
 const NOME_DESTINO: Record<Destino, string> = {
@@ -29,59 +24,45 @@ const rotuloCurto = (mes: string) => {
   return `${['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'][Number(m) - 1]} ${ano.slice(2)}`
 }
 
-function CartaoPote({
-  fonte,
-  pote,
-  cor,
-  mesEmCurso,
-}: {
-  fonte: Fonte
-  pote: Pote
-  cor: string
-  mesEmCurso?: string
-}) {
-  return (
-    <div className="pote" style={{ borderTopColor: cor }}>
-      <span className="rotulo">{NOME_FONTE[fonte]}</span>
-      <span className={`valor ${pote.porDecidir < 0 ? 'valor--negativo' : ''}`}>
-        {eur(pote.porDecidir)}
-      </span>
-      <span className="sub">
-        {eur(pote.acumulado)} acumulados
-        {pote.decidido !== 0 && `, ${eur(pote.decidido)} já afetados`}
-      </span>
-      {mesEmCurso && (
-        <span className={`projetado ${pote.projetado < 0 ? 'valor--negativo' : ''}`}>
-          {eur(pote.projetado)} se {mesEmCurso} fechasse agora
-        </span>
-      )}
-    </div>
-  )
-}
-
 export function Excedentes({ orcamento, resumos, aoMudar }: Props) {
-  const potes = useMemo(
-    () => calcularPotes(resumos, orcamento.aportes),
+  const pote = useMemo(
+    () => calcularPote(resumos, orcamento.aportes),
     [resumos, orcamento.aportes],
   )
 
   const [valor, setValor] = useState('')
-  const [fonte, setFonte] = useState<Fonte>('naoEssencial')
   const [destino, setDestino] = useState<Destino>('investimento')
   const [data, setData] = useState(hojeISO())
   const [nota, setNota] = useState('')
 
   // A transferência mensal planeada não sai dos potes: não pertence a esta lista.
-  const saidasDosPotes = orcamento.aportes.filter((a) => a.fonte !== 'planeado')
-  const totalPorDecidir = potes.essencial.porDecidir + potes.naoEssencial.porDecidir
+  const saidasDoPote = orcamento.aportes.filter((a) => a.fonte !== 'planeado')
+  const totalPorDecidir = pote.porDecidir
   const emCurso = resumos.find((r) => !r.fechado)
   const fechados = resumos.filter((r) => r.fechado)
+
+  const disponivel = pote.porDecidir
+  const pedido = Number(valor.replace(',', '.'))
+  const pedidoValido = Number.isFinite(pedido) && pedido > 0
+  // Um cêntimo de tolerância: os potes são somas de floats, não vale a pena
+  // bloquear por arredondamento.
+  const excedePote = pedidoValido && pedido > disponivel + 0.01
+  const poteVazio = disponivel <= 0
 
   const registar = (e: React.FormEvent) => {
     e.preventDefault()
     const n = Number(valor.replace(',', '.'))
-    if (!Number.isFinite(n) || n <= 0) return
-    const nova: Aporte = { id: novoId(), data, valor: n, fonte, destino, nota: nota.trim() || undefined }
+    // Não se pode tirar de um pote o que ele não tem: isso não é uma afetação,
+    // é inventar dinheiro.
+    if (!Number.isFinite(n) || n <= 0 || n > disponivel + 0.01) return
+    const nova: Aporte = {
+      id: novoId(),
+      data,
+      valor: n,
+      fonte: 'excedente',
+      destino,
+      nota: nota.trim() || undefined,
+    }
     aoMudar({ aportes: [...orcamento.aportes, nova] })
     setValor('')
     setNota('')
@@ -102,21 +83,11 @@ export function Excedentes({ orcamento, resumos, aoMudar }: Props) {
           </span>
         </div>
 
-        <div className="potes">
-          <CartaoPote
-            fonte="essencial"
-            pote={potes.essencial}
-            cor="var(--serie-1)"
-            mesEmCurso={emCurso && nomeMesCurto(emCurso.mes)}
-          />
-          <CartaoPote
-            fonte="naoEssencial"
-            pote={potes.naoEssencial}
-            cor="var(--serie-2)"
-            mesEmCurso={emCurso && nomeMesCurto(emCurso.mes)}
-          />
-        </div>
-
+        {emCurso && (
+          <p className="rodape">
+            {eur(pote.projetado)} se {nomeMesCurto(emCurso.mes)} fechasse agora.
+          </p>
+        )}
       </section>
 
       <section className="cartao">
@@ -137,22 +108,16 @@ export function Excedentes({ orcamento, resumos, aoMudar }: Props) {
             <div className="campo-entrada">
               <input type="date" aria-label="Data" value={data} onChange={(e) => setData(e.target.value)} />
             </div>
-            <button type="submit" className="botao botao--primario" disabled={!valor}>
+            <button
+              type="submit"
+              className="botao botao--primario"
+              disabled={!valor || poteVazio || excedePote}
+            >
               Registar
             </button>
           </div>
 
           <div className="linha-escolhas">
-            <div>
-              <span className="etiqueta-escolha">De</span>
-              <div className="grupo-alternar">
-                {(['essencial', 'naoEssencial'] as Fonte[]).map((f) => (
-                  <button key={f} type="button" aria-pressed={fonte === f} onClick={() => setFonte(f)}>
-                    {NOME_FONTE[f]}
-                  </button>
-                ))}
-              </div>
-            </div>
             <div>
               <span className="etiqueta-escolha">Para</span>
               <div className="grupo-alternar">
@@ -176,21 +141,35 @@ export function Excedentes({ orcamento, resumos, aoMudar }: Props) {
           </div>
         </form>
 
+        {poteVazio ? (
+          <p className="rodape" style={{ marginTop: 12 }}>
+            <strong>O pote está a {eur(disponivel)}.</strong> Não há nada a afetar
+            — e não é preciso transferir nada para o corrigir. Um pote negativo quer dizer que
+            gastaste acima do teto: esse dinheiro já saiu da conta e não chegou a ser poupança.
+            Recupera-se sozinho nos meses em que ficares abaixo do teto.
+          </p>
+        ) : (
+          excedePote && (
+            <p className="deriva deriva--sobe" style={{ marginTop: 12 }}>
+              <span aria-hidden="true">▲ </span>
+              O pote só tem {eur(disponivel)} por decidir.
+            </p>
+          )
+        )}
+
       </section>
 
-      {saidasDosPotes.length > 0 && (
+      {saidasDoPote.length > 0 && (
         <section className="cartao">
-          <h2>Decisões · {eur(saidasDosPotes.reduce((s, d) => s + d.valor, 0))}</h2>
+          <h2>Decisões · {eur(saidasDoPote.reduce((s, d) => s + d.valor, 0))}</h2>
           <ul className="lista-despesas">
-            {[...saidasDosPotes]
+            {[...saidasDoPote]
               .sort((a, b) => b.data.localeCompare(a.data))
               .map((d) => (
                 <li key={d.id}>
-                  <span className={`ponto ponto--${d.fonte}`} aria-hidden="true" />
+                  <span className="ponto ponto--naoEssencial" aria-hidden="true" />
                   <span className="lista-principal">
-                    <span className="lista-nome">
-                      {NOME_FONTE[d.fonte as Fonte]} → {NOME_DESTINO[d.destino]}
-                    </span>
+                    <span className="lista-nome">Excedente → {NOME_DESTINO[d.destino]}</span>
                     {d.nota && <span className="lista-nota">{d.nota}</span>}
                   </span>
                   <span className="lista-data">
