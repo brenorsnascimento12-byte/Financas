@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import type { Categoria, Objetivo, Orcamento } from '../types'
+import type { Categoria, Compromisso, Objetivo, Orcamento } from '../types'
 import { alvoPoupanca, mesAtual, precisaRevisao } from '../lib/orcamento'
 import { novoId, lerFicheiro } from '../lib/armazenamento'
 import { eur } from '../lib/formato'
@@ -14,6 +14,7 @@ interface Props {
 export function Definicoes({ orcamento, aoMudar, aoExportar }: Props) {
   const [novaCategoria, setNovaCategoria] = useState('')
   const [novoObjetivo, setNovoObjetivo] = useState('')
+  const [novoCompromisso, setNovoCompromisso] = useState('')
   const [erroImport, setErroImport] = useState<string | null>(null)
   const ficheiroRef = useRef<HTMLInputElement>(null)
 
@@ -36,6 +37,11 @@ export function Definicoes({ orcamento, aoMudar, aoExportar }: Props) {
 
   const atualizarCategoria = (id: string, patch: Partial<Categoria>) =>
     aoMudar({ categorias: orcamento.categorias.map((c) => (c.id === id ? { ...c, ...patch } : c)) })
+
+  const atualizarCompromisso = (id: string, patch: Partial<Compromisso>) =>
+    aoMudar({
+      compromissos: orcamento.compromissos.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+    })
 
   const atualizarObjetivo = (id: string, patch: Partial<Objetivo>) =>
     aoMudar({ objetivos: orcamento.objetivos.map((o) => (o.id === id ? { ...o, ...patch } : o)) })
@@ -112,6 +118,15 @@ export function Definicoes({ orcamento, aoMudar, aoExportar }: Props) {
             passo={50}
             sufixo="€"
             aoMudar={(v) => aoMudar({ rendimentoMensal: v })}
+          />
+          <Campo
+            etiqueta="Almofada de liquidez"
+            valor={orcamento.almofadaAlvo}
+            min={0}
+            passo={100}
+            sufixo="€"
+            dica="Piso que enche primeiro, não afetável a objetivos"
+            aoMudar={(v) => aoMudar({ almofadaAlvo: v })}
           />
           <Campo
             etiqueta="Vencimentos por ano"
@@ -236,9 +251,12 @@ export function Definicoes({ orcamento, aoMudar, aoExportar }: Props) {
       </section>
 
       <section className="cartao">
-        <h2>Objetivos a dois anos</h2>
+        <h2>Objetivos</h2>
         {orcamento.objetivos.length === 0 && (
-          <p className="vazio">Sem objetivos definidos. Revê-os sempre que o rendimento mudar.</p>
+          <p className="vazio">
+            Sem objetivos. Um objetivo com valor e data faz a cascata encaminhar dinheiro para
+            certificados até estar coberto.
+          </p>
         )}
         <ul className="lista-categorias">
           {orcamento.objetivos.map((o) => (
@@ -264,6 +282,16 @@ export function Definicoes({ orcamento, aoMudar, aoExportar }: Props) {
                   }
                 />
                 <span className="sufixo">€</span>
+              </div>
+              <div className="campo-entrada" style={{ maxWidth: 130 }}>
+                <input
+                  type="month"
+                  aria-label={`Data alvo de ${o.nome}`}
+                  value={o.dataAlvo ?? ''}
+                  onChange={(e) =>
+                    atualizarObjetivo(o.id, { dataAlvo: e.target.value || undefined })
+                  }
+                />
               </div>
               <button
                 type="button"
@@ -299,6 +327,118 @@ export function Definicoes({ orcamento, aoMudar, aoExportar }: Props) {
           </button>
         </form>
       </section>
+
+      <section className="cartao">
+        <h2>Liquidez comprometida</h2>
+        <p className="rodape" style={{ marginBottom: 12 }}>
+          Dinheiro que está na conta mas já tem dono. Sai da liquidez livre e da almofada.
+        </p>
+        {orcamento.compromissos.length === 0 && (
+          <p className="vazio">Nada comprometido: toda a liquidez conta como livre.</p>
+        )}
+        <ul className="lista-categorias">
+          {orcamento.compromissos.map((c) => (
+            <li key={c.id}>
+              <input
+                className="entrada-inline"
+                value={c.nome}
+                aria-label={`Nome do compromisso ${c.nome}`}
+                onChange={(e) => atualizarCompromisso(c.id, { nome: e.target.value })}
+              />
+              <div className="campo-entrada" style={{ maxWidth: 140 }}>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  aria-label={`Valor de ${c.nome}`}
+                  value={c.valor}
+                  onWheel={(e) => e.currentTarget.blur()}
+                  onChange={(e) => atualizarCompromisso(c.id, { valor: Number(e.target.value) || 0 })}
+                />
+                <span className="sufixo">€</span>
+              </div>
+              <button
+                type="button"
+                className="botao botao--discreto botao--perigo"
+                onClick={() =>
+                  aoMudar({ compromissos: orcamento.compromissos.filter((x) => x.id !== c.id) })
+                }
+              >
+                Remover
+              </button>
+            </li>
+          ))}
+        </ul>
+        <form
+          className="registo-linha"
+          style={{ marginTop: 12 }}
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (!novoCompromisso.trim()) return
+            aoMudar({
+              compromissos: [
+                ...orcamento.compromissos,
+                { id: novoId(), nome: novoCompromisso.trim(), valor: 0 },
+              ],
+            })
+            setNovoCompromisso('')
+          }}
+        >
+          <div className="campo-entrada">
+            <input
+              type="text"
+              placeholder="Novo compromisso"
+              aria-label="Novo compromisso"
+              value={novoCompromisso}
+              onChange={(e) => setNovoCompromisso(e.target.value)}
+            />
+          </div>
+          <button type="submit" className="botao">
+            Acrescentar
+          </button>
+        </form>
+      </section>
+
+      <section className="cartao">
+        <h2>Marcos de revisão</h2>
+        <p className="rodape" style={{ marginBottom: 12 }}>
+          Datas em que a estratégia deve ser reaberta. São memória, não automatismo — nada
+          acontece sozinho nestas datas.
+        </p>
+        {orcamento.revisoes.length === 0 ? (
+          <p className="vazio">Sem marcos definidos.</p>
+        ) : (
+          <ul className="lista-revisoes">
+            {[...orcamento.revisoes]
+              .sort((a, b) => a.data.localeCompare(b.data))
+              .map((r) => {
+                const passou = r.data <= mesAtual()
+                return (
+                  <li key={r.id} className={passou ? 'revisao--devida' : undefined}>
+                    <span className="revisao-data">{r.data}</span>
+                    <span className="revisao-corpo">
+                      <span className="revisao-titulo">
+                        {r.titulo}
+                        {passou && <span className="revisao-etiqueta">a rever</span>}
+                      </span>
+                      {r.nota && <span className="revisao-nota">{r.nota}</span>}
+                    </span>
+                    <button
+                      type="button"
+                      className="botao botao--discreto botao--perigo"
+                      onClick={() =>
+                        aoMudar({ revisoes: orcamento.revisoes.filter((x) => x.id !== r.id) })
+                      }
+                      aria-label={`Remover marco ${r.titulo}`}
+                    >
+                      ×
+                    </button>
+                  </li>
+                )
+              })}
+          </ul>
+        )}
+      </section>
+
     </>
   )
 }

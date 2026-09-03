@@ -1,4 +1,4 @@
-import type { Aporte, Categoria, Fonte, Orcamento, Pote, ResumoMes, Despesa } from '../types'
+import type { Aporte, Categoria, Fonte, Objetivo, Orcamento, PassoCascata, Pote, ProgressoObjetivo, ResumoMes, Saldo, Despesa } from '../types'
 
 export const mesDe = (data: string) => data.slice(0, 7)
 
@@ -154,14 +154,131 @@ export const precisaRevisao = (o: Orcamento) => o.rendimentoMensal !== o.rendime
 export const faltaFotografiaEsteMes = (o: Orcamento) =>
   !o.saldos.some((s) => mesDe(s.data) === mesAtual())
 
+/** Liquidez que já tem dono: voo, reservas, o que estiver marcado. */
+export const totalComprometido = (o: Orcamento) =>
+  o.compromissos.reduce((s, c) => s + c.valor, 0)
+
 /** Saldos por ordem cronológica, com o total e o acumulado aportado até essa data. */
 export function evolucaoPatrimonio(o: Orcamento) {
   const saldos = [...o.saldos].sort((a, b) => a.data.localeCompare(b.data))
   return saldos.map((s) => ({
     ...s,
-    total: s.investido + s.liquidez,
+    // A reserva em reais fica deliberadamente fora: é para gastar no Brasil, sem
+    // conversão, e somá-la em euros só acrescentaria ruído cambial.
+    total: s.investido + s.liquidez + s.certificados,
     // Tudo o que foi transferido até esta data: a diferença para o total é o que
-    // o mercado deu ou tirou.
+    // o mercado (ou os juros dos certificados) deu ou tirou.
     aportadoAte: o.aportes.filter((a) => a.data <= s.data).reduce((acc, a) => acc + a.valor, 0),
   }))
 }
+
+export const ultimoSaldo = (o: Orcamento): Saldo | undefined =>
+  [...o.saldos].sort((a, b) => a.data.localeCompare(b.data)).at(-1)
+
+/** Meses inteiros de 'de' até 'ate', ambos em YYYY-MM. */
+export function mesesEntre(de: string, ate: string): number {
+  const [a1, m1] = de.split('-').map(Number)
+  const [a2, m2] = ate.split('-').map(Number)
+  return (a2 - a1) * 12 + (m2 - m1)
+}
+
+/** O objetivo que a cascata financia: o primeiro com alvo e data definidos. */
+export const objetivoComData = (o: Orcamento): Objetivo | undefined =>
+  o.objetivos.find((ob) => ob.valorAlvo !== undefined && ob.dataAlvo !== undefined)
+
+/**
+ * Progresso de um objetivo com alvo e data. O saldo em Certificados é o que conta:
+ * é para lá que a cascata encaminha este dinheiro, por ser valor previsível a prazo
+ * curto — dinheiro com data marcada não pertence a um ativo volátil.
+ */
+export function progressoObjetivo(o: Orcamento, objetivo: Objetivo): ProgressoObjetivo | null {
+  if (objetivo.valorAlvo === undefined || objetivo.dataAlvo === undefined) return null
+
+  const alvo = objetivo.valorAlvo
+  const saldo = ultimoSaldo(o)
+  const aportesCertificados = o.aportes.filter((a) => a.destino === 'certificados')
+  // Se já há fotografia, vale o saldo real (inclui juros). Senão, o que foi aportado.
+  const atual = saldo
+    ? saldo.certificados
+    : aportesCertificados.reduce((s, a) => s + a.valor, 0)
+
+  const falta = Math.max(0, alvo - atual)
+  const mesesRestantes = Math.max(0, mesesEntre(mesAtual(), objetivo.dataAlvo))
+  const necessarioMensal = falta === 0 ? 0 : falta / Math.max(1, mesesRestantes)
+
+  // Ritmo medido: o que foi aportado a certificados, espalhado pelos meses desde
+  // o primeiro aporte. Sem aportes ainda, não há ritmo a comparar.
+  let ritmoAtual: number | null = null
+  if (aportesCertificados.length > 0) {
+    const primeiro = aportesCertificados
+      .map((a) => mesDe(a.data))
+      .sort()[0]
+    const meses = Math.max(1, mesesEntre(primeiro, mesAtual()) + 1)
+    ritmoAtual = aportesCertificados.reduce((s, a) => s + a.valor, 0) / meses
+  }
+
+  return {
+    objetivo,
+    alvo,
+    atual,
+    falta,
+    pct: alvo > 0 ? Math.min(1, atual / alvo) : 0,
+    mesesRestantes,
+    necessarioMensal,
+    ritmoAtual,
+    // Tolerância de 5%: não vale a pena alarmar por cêntimos de arredondamento.
+    emDesvio: ritmoAtual !== null && falta > 0 && necessarioMensal > ritmoAtual * 1.05,
+  }
+}
+
+/**
+ * Para onde deve ir a poupança deste mês, por ordem de prioridade:
+ *
+ *   1. Almofada de liquidez até ao piso — não é afetável a objetivos.
+ *   2. O objetivo com data, em Certificados, até ao ritmo necessário.
+ *   3. Tudo o resto em ETFs, sem teto.
+ *
+ * Os ETFs já detidos nunca entram nesta conta: só condiciona o aporte novo.
+ */
+export function calcularCascata(o: Orcamento, montante: number): PassoCascata[] {
+  const passos: PassoCascata[] = []
+  let resto = Math.max(0, montante)
+  if (resto === 0) return passos
+
+  // Sem fotografia não se sabe onde está a liquidez. Assumir zero e subtrair os
+  // compromissos daria um buraco inventado — o passo fica de fora até haver dados.
+  const saldo = ultimoSaldo(o)
+  const liquidezLivre = saldo ? saldo.liquidez - totalComprometido(o) : null
+  const faltaAlmofada = liquidezLivre === null ? 0 : Math.max(0, o.almofadaAlvo - liquidezLivre)
+
+  if (faltaAlmofada > 0) {
+    const valor = Math.min(resto, faltaAlmofada)
+    passos.push({
+      destino: 'liquidez',
+      valor,
+      razao: `almofada em ${eurSeco(liquidezLivre ?? 0)} de ${eurSeco(o.almofadaAlvo)}`,
+    })
+    resto -= valor
+  }
+
+  const objetivo = objetivoComData(o)
+  const progresso = objetivo ? progressoObjetivo(o, objetivo) : null
+  if (resto > 0 && progresso && progresso.falta > 0) {
+    const valor = Math.min(resto, progresso.necessarioMensal)
+    passos.push({
+      destino: 'certificados',
+      valor,
+      razao: `${progresso.objetivo.nome}: faltam ${progresso.mesesRestantes} meses`,
+    })
+    resto -= valor
+  }
+
+  if (resto > 0) {
+    passos.push({ destino: 'investimento', valor: resto, razao: 'excedente acima das prioridades' })
+  }
+
+  return passos
+}
+
+/** Formatação mínima para as razões da cascata, sem depender do módulo de formato. */
+const eurSeco = (v: number) => `${Math.round(v)} €`

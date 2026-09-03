@@ -18,6 +18,7 @@ const NOME_FONTE: Record<Fonte, string> = {
 const NOME_DESTINO: Record<Destino, string> = {
   investimento: 'Investimento',
   liquidez: 'Liquidez',
+  certificados: 'Certificados',
 }
 
 /** "agosto", sem o ano: cabe em linhas de texto corrido. */
@@ -155,7 +156,7 @@ export function Excedentes({ orcamento, resumos, aoMudar }: Props) {
             <div>
               <span className="etiqueta-escolha">Para</span>
               <div className="grupo-alternar">
-                {(['investimento', 'liquidez'] as Destino[]).map((d) => (
+                {(['investimento', 'certificados', 'liquidez'] as Destino[]).map((d) => (
                   <button key={d} type="button" aria-pressed={destino === d} onClick={() => setDestino(d)}>
                     {NOME_DESTINO[d]}
                   </button>

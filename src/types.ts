@@ -24,18 +24,25 @@ export interface Objetivo {
   nome: string
   /** Opcional: nem todo o objetivo tem número. */
   valorAlvo?: number
+  /** YYYY-MM em que tem de estar cumprido. Sem isto não há ritmo a calcular. */
+  dataAlvo?: string
   notas?: string
 }
 
 export type Fonte = 'essencial' | 'naoEssencial'
-export type Destino = 'investimento' | 'liquidez'
+
+/**
+ * 'certificados' são Certificados de Aforro: valor previsível a prazo curto, é
+ * para lá que a cascata encaminha o dinheiro dos objetivos com data.
+ */
+export type Destino = 'investimento' | 'liquidez' | 'certificados'
 
 /** 'planeado' é a transferência mensal recorrente; as outras vêm dos potes. */
 export type FonteAporte = 'planeado' | Fonte
 
 /**
- * Dinheiro efetivamente transferido para investimento ou liquidez. É isto que
- * conta como poupança — não o que sobra na conta ao fim do mês.
+ * Dinheiro efetivamente transferido para investimento, liquidez ou certificados.
+ * É isto que conta como poupança — não o que sobra na conta ao fim do mês.
  *
  * Os aportes com fonte 'essencial' ou 'naoEssencial' são saídas dos potes. As
  * despesas nunca se registam aqui: consomem o pote pela via do mês acima do teto.
@@ -57,6 +64,29 @@ export interface Saldo {
   data: string
   investido: number
   liquidez: number
+  /** Certificados de Aforro (IGCP). Crescem por juros, que aparecem como mercado. */
+  certificados: number
+  /**
+   * Reserva em reais. Fica fora do património em euros de propósito: destina-se
+   * a ser gasta no Brasil sem conversão, e converter só acrescentaria ruído cambial.
+   */
+  brl: number
+}
+
+/** Parte da liquidez que já tem dono e não deve contar como disponível. */
+export interface Compromisso {
+  id: string
+  nome: string
+  valor: number
+}
+
+/** Marcador de data para reabrir a estratégia. Sem lógica associada, só memória. */
+export interface Revisao {
+  id: string
+  /** YYYY-MM */
+  data: string
+  titulo: string
+  nota?: string
 }
 
 export interface Orcamento {
@@ -70,6 +100,10 @@ export interface Orcamento {
   objetivos: Objetivo[]
   aportes: Aporte[]
   saldos: Saldo[]
+  compromissos: Compromisso[]
+  revisoes: Revisao[]
+  /** Piso de liquidez livre. Enche primeiro e não é afetável a objetivos. */
+  almofadaAlvo: number
   /** YYYY-MM da última revisão de rácios e objetivos. */
   ultimaRevisao: string
   /** Rendimento em vigor na última revisão: se divergir, pede-se nova revisão. */
@@ -115,3 +149,24 @@ export interface Pote {
   projetado: number
 }
 
+export interface ProgressoObjetivo {
+  objetivo: Objetivo
+  alvo: number
+  /** Saldo em certificados: é para lá que a cascata encaminha este dinheiro. */
+  atual: number
+  falta: number
+  pct: number
+  mesesRestantes: number
+  /** Quanto é preciso pôr de lado por mês, a partir de agora, para chegar a horas. */
+  necessarioMensal: number
+  /** Ritmo médio observado nos aportes a certificados. Null se ainda não há dados. */
+  ritmoAtual: number | null
+  /** Só sinaliza quando há ritmo medido com que comparar. */
+  emDesvio: boolean
+}
+
+export interface PassoCascata {
+  destino: Destino
+  valor: number
+  razao: string
+}

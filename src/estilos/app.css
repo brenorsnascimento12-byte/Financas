@@ -1025,3 +1025,126 @@ thead th {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* ---------- Cascata de afetação ---------- */
+
+.cascata {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cascata li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.cascata li:last-child {
+  border-bottom: 0;
+}
+
+.cascata-ordem {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--wash);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cascata-principal {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cascata-nome {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cascata-razao {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.cascata-valor {
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* ---------- Marcos de revisão ---------- */
+
+.lista-revisoes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.lista-revisoes li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.revisao-data {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  padding-top: 2px;
+}
+
+.revisao--devida .revisao-data {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.revisao-corpo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.revisao-titulo {
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.revisao-etiqueta {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--warning) 22%, var(--surface-1));
+  color: var(--text-primary);
+}
+
+.revisao-nota {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}

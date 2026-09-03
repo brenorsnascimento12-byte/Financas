@@ -13,17 +13,18 @@ export interface Estado {
 }
 
 /**
- * Categorias de arranque a partir da realidade descrita: viagens casa/AFA duas
- * vezes por semana, suplemento alimentar, subscrições, e o gasto de fim de semana.
+ * Categorias e valores de arranque a partir da realidade medida: transporte
+ * Braga–Sintra duas viagens por semana, alimentação suplementar, barbeiro e
+ * telemóvel dão ~276 €/mês de essenciais.
+ *
  * Claude e Google One entram como não essenciais de propósito — o erro comum é
- * classificar como essencial tudo aquilo de que não nos queremos privar. Muda se
- * discordares, é um clique.
+ * classificar como essencial tudo aquilo de que não nos queremos privar.
  */
 const categoriasIniciais = () => [
-  { id: novoId(), nome: 'Viagens casa ↔ AFA', fatia: 'essencial' as const },
-  { id: novoId(), nome: 'Suplemento alimentar', fatia: 'essencial' as const },
+  { id: novoId(), nome: 'Transporte Braga ↔ Sintra', fatia: 'essencial' as const },
+  { id: novoId(), nome: 'Alimentação suplementar', fatia: 'essencial' as const },
+  { id: novoId(), nome: 'Barbeiro', fatia: 'essencial' as const },
   { id: novoId(), nome: 'Telemóvel', fatia: 'essencial' as const },
-  { id: novoId(), nome: 'Gasolina (fim de semana)', fatia: 'naoEssencial' as const },
   { id: novoId(), nome: 'Restaurantes', fatia: 'naoEssencial' as const },
   { id: novoId(), nome: 'Viagens e saídas', fatia: 'naoEssencial' as const },
   { id: novoId(), nome: 'Compras', fatia: 'naoEssencial' as const },
@@ -32,19 +33,42 @@ const categoriasIniciais = () => [
 ]
 
 export const orcamentoInicial = (): Orcamento => ({
-  rendimentoMensal: 1000,
+  rendimentoMensal: 600,
   vencimentosPorAno: 14,
-  // O 50/30/20 que já usavas, como ponto de partida. Ajustamos depois de medir
-  // os primeiros meses reais em vez de fixar um alvo tirado de um livro.
-  alvoEssencial: 50,
-  alvoNaoEssencial: 30,
+  // Rácios da fase atual, calculados sobre os essenciais reais (~276 €) e não
+  // tirados de um livro. São temporários: os essenciais não sobem com o vencimento,
+  // por isso a poupança deve subir muito na mudança de escalão — ver as revisões.
+  alvoEssencial: 46,
+  alvoNaoEssencial: 16,
   categorias: categoriasIniciais(),
   despesas: [],
-  objetivos: [],
+  objetivos: [{ id: novoId(), nome: 'Casamento', valorAlvo: 6500, dataAlvo: '2029-01' }],
   aportes: [],
   saldos: [],
+  compromissos: [{ id: novoId(), nome: 'Voo para o Brasil', valor: 1000 }],
+  revisoes: [
+    {
+      id: novoId(),
+      data: '2027-01',
+      titulo: 'Mudança de escalão — Aspirante',
+      nota: 'Líquido sobe para ~1800 €/mês e os essenciais mantêm-se em ~276 €: caem para ~15% do rendimento. Recalcular os rácios — a poupança pode subir para 60-70% sem sacrifício. (6.º ano, Alferes: ~2200 €/mês.)',
+    },
+    {
+      id: novoId(),
+      data: '2027-01',
+      titulo: 'Reunião do tirocínio no Brasil',
+      nota: 'Decisão do comando. Se avançar, reabrir a alocação com o capital novo.',
+    },
+    {
+      id: novoId(),
+      data: '2028-06',
+      titulo: 'Casamento e decisão de casa',
+      nota: 'Reavaliar o alvo e o destino do dinheiro à medida que a data se aproxima.',
+    },
+  ],
+  almofadaAlvo: 800,
   ultimaRevisao: mesAtual(),
-  rendimentoNaRevisao: 1000,
+  rendimentoNaRevisao: 600,
 })
 
 export const estadoInicial = (): Estado => ({ orcamento: orcamentoInicial() })
@@ -63,6 +87,15 @@ function migrar(guardado: Partial<Orcamento> | undefined): Orcamento {
   }
   if (!Array.isArray(orcamento.aportes)) orcamento.aportes = []
   if (!Array.isArray(orcamento.saldos)) orcamento.saldos = []
+  if (!Array.isArray(orcamento.compromissos)) orcamento.compromissos = []
+  if (!Array.isArray(orcamento.revisoes)) orcamento.revisoes = []
+  if (typeof orcamento.almofadaAlvo !== 'number') orcamento.almofadaAlvo = base.almofadaAlvo
+  // Fotografias antigas não tinham certificados nem reserva em reais.
+  orcamento.saldos = orcamento.saldos.map((s) => ({
+    ...s,
+    certificados: typeof s.certificados === 'number' ? s.certificados : 0,
+    brl: typeof s.brl === 'number' ? s.brl : 0,
+  }))
   // A chave antiga não fica a viver para sempre nas exportações.
   delete (orcamento as Partial<Orcamento> & { decisoes?: unknown }).decisoes
   return orcamento

@@ -1,8 +1,16 @@
 import { useMemo, useState } from 'react'
 import type { Aporte, Destino, Orcamento, Saldo } from '../types'
-import { evolucaoPatrimonio, faltaFotografiaEsteMes, hojeISO, mesAtual, nomeMes } from '../lib/orcamento'
+import {
+  evolucaoPatrimonio,
+  faltaFotografiaEsteMes,
+  hojeISO,
+  mesAtual,
+  nomeMes,
+  totalComprometido,
+} from '../lib/orcamento'
+import { ObjetivoECascata } from './ObjetivoECascata'
 import { novoId } from '../lib/armazenamento'
-import { dataCurta, eur, pct } from '../lib/formato'
+import { brlFmt, dataCurta, eur, pct } from '../lib/formato'
 import { GraficoPatrimonio } from './GraficoPatrimonio'
 
 interface Props {
@@ -13,6 +21,7 @@ interface Props {
 const NOME_DESTINO: Record<Destino, string> = {
   investimento: 'Investimento',
   liquidez: 'Liquidez',
+  certificados: 'Certificados',
 }
 
 export function Patrimonio({ orcamento, aoMudar }: Props) {
@@ -21,6 +30,8 @@ export function Patrimonio({ orcamento, aoMudar }: Props) {
 
   const [investido, setInvestido] = useState('')
   const [liquidez, setLiquidez] = useState('')
+  const [certificados, setCertificados] = useState('')
+  const [brl, setBrl] = useState('')
   const [dataSaldo, setDataSaldo] = useState(hojeISO())
 
   const [valorAporte, setValorAporte] = useState('')
@@ -30,18 +41,28 @@ export function Patrimonio({ orcamento, aoMudar }: Props) {
   const planeados = orcamento.aportes.filter((a) => a.fonte === 'planeado')
   const totalAportado = orcamento.aportes.reduce((s, a) => s + a.valor, 0)
   const mercado = atual ? atual.total - atual.aportadoAte : 0
+  const comprometido = totalComprometido(orcamento)
+  const liquidezLivre = (atual?.liquidez ?? 0) - comprometido
 
   const registarSaldo = (e: React.FormEvent) => {
     e.preventDefault()
-    const i = Number(investido.replace(',', '.')) || 0
-    const l = Number(liquidez.replace(',', '.')) || 0
-    if (investido === '' && liquidez === '') return
-    const novo: Saldo = { id: novoId(), data: dataSaldo, investido: i, liquidez: l }
+    const num = (v: string) => Number(v.replace(',', '.')) || 0
+    if (investido === '' && liquidez === '' && certificados === '' && brl === '') return
+    const novo: Saldo = {
+      id: novoId(),
+      data: dataSaldo,
+      investido: num(investido),
+      liquidez: num(liquidez),
+      certificados: num(certificados),
+      brl: num(brl),
+    }
     // Uma data só tem uma fotografia: registar de novo substitui.
     const semRepetida = orcamento.saldos.filter((s) => s.data !== dataSaldo)
     aoMudar({ saldos: [...semRepetida, novo] })
     setInvestido('')
     setLiquidez('')
+    setCertificados('')
+    setBrl('')
   }
 
   const registarAporte = (e: React.FormEvent) => {
@@ -79,9 +100,31 @@ export function Patrimonio({ orcamento, aoMudar }: Props) {
             <div className="destaque">
               <span className="valor">{eur(atual.total)}</span>
               <span className="nota">
-                Em {dataCurta(atual.data)} · {eur(atual.investido)} investido,{' '}
-                {eur(atual.liquidez)} em liquidez
+                Em {dataCurta(atual.data)} · {eur(atual.investido)} em ETFs,{' '}
+                {eur(atual.certificados)} em certificados, {eur(atual.liquidez)} em liquidez
               </span>
+            </div>
+
+            <div className="potes" style={{ marginBottom: 16 }}>
+              <div className="pote" style={{ borderTopColor: 'var(--serie-3)' }}>
+                <span className="rotulo">Liquidez livre</span>
+                <span className={`valor ${liquidezLivre < 0 ? 'valor--negativo' : ''}`}>
+                  {eur(liquidezLivre)}
+                </span>
+                <span className="sub">
+                  {eur(atual.liquidez)} menos {eur(comprometido)} já com dono
+                </span>
+                {orcamento.compromissos.length > 0 && (
+                  <span className="projetado">
+                    {orcamento.compromissos.map((c) => `${c.nome}: ${eur(c.valor)}`).join(' · ')}
+                  </span>
+                )}
+              </div>
+              <div className="pote" style={{ borderTopColor: 'var(--text-muted)' }}>
+                <span className="rotulo">Reserva em reais</span>
+                <span className="valor">{brlFmt(atual.brl)}</span>
+                <span className="sub">fora do património em euros, para gastar no Brasil</span>
+              </div>
             </div>
 
             <div className="mosaicos">
@@ -103,6 +146,8 @@ export function Patrimonio({ orcamento, aoMudar }: Props) {
           </>
         )}
       </section>
+
+      <ObjetivoECascata orcamento={orcamento} />
 
       {pontos.length > 1 && (
         <section className="cartao">
@@ -144,6 +189,36 @@ export function Patrimonio({ orcamento, aoMudar }: Props) {
                 <span className="sufixo">€</span>
               </div>
               <span className="dica">Conta à ordem e depósitos</span>
+            </div>
+            <div className="campo">
+              <label htmlFor="saldo-certificados">Certificados</label>
+              <div className="campo-entrada">
+                <input
+                  id="saldo-certificados"
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="0"
+                  value={certificados}
+                  onChange={(e) => setCertificados(e.target.value)}
+                />
+                <span className="sufixo">€</span>
+              </div>
+              <span className="dica">Certificados de Aforro, no IGCP</span>
+            </div>
+            <div className="campo">
+              <label htmlFor="saldo-brl">Reserva em reais</label>
+              <div className="campo-entrada">
+                <input
+                  id="saldo-brl"
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="0"
+                  value={brl}
+                  onChange={(e) => setBrl(e.target.value)}
+                />
+                <span className="sufixo">R$</span>
+              </div>
+              <span className="dica">Não entra no total em euros</span>
             </div>
           </div>
           <div className="registo-linha">
@@ -199,7 +274,7 @@ export function Patrimonio({ orcamento, aoMudar }: Props) {
             <div>
               <span className="etiqueta-escolha">Para</span>
               <div className="grupo-alternar">
-                {(['investimento', 'liquidez'] as Destino[]).map((d) => (
+                {(['investimento', 'certificados', 'liquidez'] as Destino[]).map((d) => (
                   <button key={d} type="button" aria-pressed={destino === d} onClick={() => setDestino(d)}>
                     {NOME_DESTINO[d]}
                   </button>
@@ -256,6 +331,7 @@ export function Patrimonio({ orcamento, aoMudar }: Props) {
                 <tr>
                   <th scope="col">Data</th>
                   <th scope="col">Investido</th>
+                  <th scope="col">Certificados</th>
                   <th scope="col">Liquidez</th>
                   <th scope="col">Total</th>
                   <th scope="col">Mercado</th>
@@ -267,6 +343,7 @@ export function Patrimonio({ orcamento, aoMudar }: Props) {
                   <tr key={p.id}>
                     <th scope="row">{dataCurta(p.data)}</th>
                     <td>{eur(p.investido)}</td>
+                    <td>{eur(p.certificados)}</td>
                     <td>{eur(p.liquidez)}</td>
                     <td>{eur(p.total)}</td>
                     <td className={p.total - p.aportadoAte < 0 ? 'celula--negativa' : ''}>
