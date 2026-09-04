@@ -6,7 +6,8 @@ export interface PontoPatrimonio {
   total: number
   investido: number
   liquidez: number
-  aportadoAte: number
+  capital: number
+  mercado: number
 }
 
 interface Props {
@@ -64,8 +65,14 @@ export function GraficoPatrimonio({ pontos }: Props) {
 
   const altura = largura < 440 ? 220 : 280
   const escala = useMemo(() => {
-    const valores = pontos.flatMap((p) => [p.total, p.aportadoAte])
-    return escalaAgradavel(Math.min(0, ...valores), Math.max(...valores, 1))
+    const valores = pontos.flatMap((p) => [p.total, p.capital])
+    const min = Math.min(...valores)
+    const max = Math.max(...valores, 1)
+    // Linha de evolução, não barras: forçar o zero esmagaria a variação contra o
+    // fundo do gráfico. Enquadra-se o intervalo real com folga, e só se desce a
+    // zero quando os valores já lá andam perto.
+    const folga = Math.max((max - min) * 0.2, max * 0.02)
+    return escalaAgradavel(min - folga < max * 0.25 ? 0 : min - folga, max + folga)
   }, [pontos])
 
   const rotulosY = useMemo(() => escala.ticks.map((t) => eur(t)), [escala])
@@ -108,7 +115,7 @@ export function GraficoPatrimonio({ pontos }: Props) {
           </span>
           <span className="legenda-item">
             <span className="chave-linha" style={{ background: 'var(--serie-2)' }} />
-            Aportado
+            Capital
           </span>
         </div>
       </div>
@@ -161,14 +168,14 @@ export function GraficoPatrimonio({ pontos }: Props) {
             d={`${caminho((q) => q.total)} ${pontos
               .map((q, i) => ({ q, i }))
               .reverse()
-              .map(({ q, i }) => `L${x(i).toFixed(1)},${y(q.aportadoAte).toFixed(1)}`)
+              .map(({ q, i }) => `L${x(i).toFixed(1)},${y(q.capital).toFixed(1)}`)
               .join(' ')} Z`}
             fill="var(--serie-1)"
             fillOpacity={0.1}
           />
 
           <path
-            d={caminho((q) => q.aportadoAte)}
+            d={caminho((q) => q.capital)}
             fill="none"
             stroke="var(--serie-2)"
             strokeWidth={2}
@@ -246,14 +253,14 @@ export function GraficoPatrimonio({ pontos }: Props) {
             <div className="dica-linha">
               <span className="nome">
                 <span className="chave-linha" style={{ background: 'var(--serie-2)' }} />
-                Aportado
+                Capital
               </span>
-              <span className="num">{eur(p.aportadoAte)}</span>
+              <span className="num">{eur(p.capital)}</span>
             </div>
             <div className="separador" />
             <div className="dica-linha">
               <span className="nome">Mercado</span>
-              <span className="num">{eur(p.total - p.aportadoAte)}</span>
+              <span className="num">{eur(p.mercado)}</span>
             </div>
           </div>
         )}

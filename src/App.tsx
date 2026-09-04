@@ -4,13 +4,11 @@ import type { Despesa, Orcamento } from './types'
 import { carregar, guardar, exportar, novoId, type Estado } from './lib/armazenamento'
 import { alvoPoupanca, faltaFotografiaEsteMes, mesAtual, precisaRevisao, resumirMeses } from './lib/orcamento'
 import { Mes } from './componentes/Mes'
-import { Excedentes } from './componentes/Excedentes'
-import { Patrimonio } from './componentes/Patrimonio'
-import { Historico } from './componentes/Historico'
+import { Rumo } from './componentes/Rumo'
 import { Definicoes } from './componentes/Definicoes'
 
 type Tema = 'auto' | 'light' | 'dark'
-type Aba = 'mes' | 'excedentes' | 'patrimonio' | 'historico' | 'definicoes'
+type Aba = 'mes' | 'rumo' | 'definicoes'
 
 const CHAVE_TEMA = 'financas:tema'
 const NOME_TEMA: Record<Tema, string> = { auto: 'Automático', light: 'Claro', dark: 'Escuro' }
@@ -18,9 +16,7 @@ const temaSeguinte = (t: Tema): Tema => (t === 'auto' ? 'light' : t === 'light' 
 
 const ABAS: { id: Aba; nome: string }[] = [
   { id: 'mes', nome: 'Mês' },
-  { id: 'excedentes', nome: 'Excedentes' },
-  { id: 'patrimonio', nome: 'Património' },
-  { id: 'historico', nome: 'Histórico' },
+  { id: 'rumo', nome: 'Rumo' },
   { id: 'definicoes', nome: 'Definições' },
 ]
 
@@ -67,10 +63,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="cabecalho">
-        <div>
-          <h1>Finanças</h1>
-          <p>Os teus dados ficam neste dispositivo</p>
-        </div>
+        <h1>Finanças</h1>
         <div className="acoes">
           <button type="button" className="botao" onClick={() => exportar(estado)}>
             Exportar
@@ -101,7 +94,7 @@ export default function App() {
                 1
               </span>
             )}
-            {a.id === 'patrimonio' && faltaFoto && (
+            {a.id === 'rumo' && faltaFoto && (
               <span className="pastilha" aria-label="falta a fotografia deste mês">
                 1
               </span>
@@ -122,16 +115,13 @@ export default function App() {
         />
       )}
 
-      {aba === 'excedentes' && (
-        <Excedentes orcamento={estado.orcamento} resumos={resumos} aoMudar={definirOrcamento} />
-      )}
-
-      {aba === 'patrimonio' && (
-        <Patrimonio orcamento={estado.orcamento} aoMudar={definirOrcamento} />
-      )}
-
-      {aba === 'historico' && (
-        <Historico resumos={resumos} alvoPoupanca={alvoPoupanca(estado.orcamento)} />
+      {aba === 'rumo' && (
+        <Rumo
+          orcamento={estado.orcamento}
+          resumos={resumos}
+          alvoPoupanca={alvoPoupanca(estado.orcamento)}
+          aoMudar={definirOrcamento}
+        />
       )}
 
       {aba === 'definicoes' && (

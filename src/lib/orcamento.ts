@@ -153,18 +153,37 @@ export const faltaFotografiaEsteMes = (o: Orcamento) =>
 export const totalComprometido = (o: Orcamento) =>
   o.compromissos.reduce((s, c) => s + c.valor, 0)
 
-/** Saldos por ordem cronológica, com o total e o acumulado aportado até essa data. */
+/**
+ * Saldos por ordem cronológica, com o retorno medido a partir de uma linha de base.
+ *
+ * A primeira fotografia é o ponto de partida, não um ganho: quem começa a usar a app
+ * com dinheiro já acumulado veria esse saldo inteiro contado como retorno do mercado.
+ * O retorno mede-se só a partir dela — o que explica que a primeira linha tenha
+ * sempre mercado a zero.
+ */
 export function evolucaoPatrimonio(o: Orcamento) {
   const saldos = [...o.saldos].sort((a, b) => a.data.localeCompare(b.data))
-  return saldos.map((s) => ({
-    ...s,
-    // A reserva em reais fica deliberadamente fora: é para gastar no Brasil, sem
-    // conversão, e somá-la em euros só acrescentaria ruído cambial.
-    total: s.investido + s.liquidez + s.certificados,
-    // Tudo o que foi transferido até esta data: a diferença para o total é o que
-    // o mercado (ou os juros dos certificados) deu ou tirou.
-    aportadoAte: o.aportes.filter((a) => a.data <= s.data).reduce((acc, a) => acc + a.valor, 0),
-  }))
+  const base = saldos[0]
+  const totalDe = (s: Saldo) => s.investido + s.liquidez + s.certificados
+  const totalBase = base ? totalDe(base) : 0
+
+  return saldos.map((s) => {
+    const total = totalDe(s)
+    const aportadoDesdeBase = base
+      ? o.aportes
+          .filter((a) => a.data > base.data && a.data <= s.data)
+          .reduce((acc, a) => acc + a.valor, 0)
+      : 0
+    return {
+      ...s,
+      total,
+      partida: totalBase,
+      aportadoDesdeBase,
+      /** Capital que puseste lá: o ponto de partida mais os aportes desde então. */
+      capital: totalBase + aportadoDesdeBase,
+      mercado: total - totalBase - aportadoDesdeBase,
+    }
+  })
 }
 
 export const ultimoSaldo = (o: Orcamento): Saldo | undefined =>
