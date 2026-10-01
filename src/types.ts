@@ -91,6 +91,45 @@ export interface Revisao {
   nota?: string
 }
 
+/** O que uma linha do extrato é, depois de classificada. */
+export type TipoMovimento = 'despesa' | 'rendimento' | 'aporte' | 'comissao' | 'transferencia'
+
+/**
+ * Regra aprendida na triagem: aplica-se a todos os movimentos cujo descritivo
+ * normalizado contenha `padrao`. É sempre sugestão — nunca escreve sozinha.
+ */
+export interface Regra {
+  id: string
+  /** Substring do descritivo normalizado, ex. "PINGO DOCE". */
+  padrao: string
+  tipo: TipoMovimento | 'ignorar'
+  /** Obrigatório quando tipo === 'despesa'. */
+  categoriaId?: string
+}
+
+/** Uma linha do extrato. Nunca é persistida: vive só durante a triagem. */
+export interface MovimentoExtrato {
+  /**
+   * Impressão digital estável, para a linha ser reconhecível entre importações:
+   * `data|valor|chave|ocorrência`. A ocorrência distingue duas compras iguais no
+   * mesmo dia e no mesmo sítio, que de outro modo colidiriam.
+   */
+  id: string
+  /** YYYY-MM-DD, com o ano já resolvido a partir do período do extrato. */
+  data: string
+  dataValor: string
+  /** Descritivo bruto, tal como sai do PDF. */
+  descritivo: string
+  /** Descritivo normalizado, para regras e comparações. */
+  chave: string
+  /** Sempre positivo; o sinal vive em `sinal`. */
+  valor: number
+  sinal: 'debito' | 'credito'
+  saldo: number
+  /** Id do movimento-mãe, quando esta linha é uma comissão. */
+  paiId?: string
+}
+
 export interface Orcamento {
   rendimentoMensal: number
   vencimentosPorAno: number
@@ -104,6 +143,13 @@ export interface Orcamento {
   saldos: Saldo[]
   compromissos: Compromisso[]
   revisoes: Revisao[]
+  regras: Regra[]
+  /**
+   * Impressões digitais de linhas concretas mandadas ignorar. Distingue-se de
+   * uma `Regra` com tipo 'ignorar': a regra silencia todos os movimentos com
+   * aquele descritivo, esta lista silencia apenas aquela linha daquele dia.
+   */
+  linhasIgnoradas: string[]
   /** Piso de liquidez livre. Enche primeiro e não é afetável a objetivos. */
   almofadaAlvo: number
   /** YYYY-MM da última revisão de rácios e objetivos. */

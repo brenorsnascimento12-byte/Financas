@@ -67,6 +67,8 @@ export const orcamentoInicial = (): Orcamento => ({
     },
   ],
   almofadaAlvo: 800,
+  regras: [],
+  linhasIgnoradas: [],
   ultimaRevisao: mesAtual(),
   rendimentoNaRevisao: 600,
 })
@@ -89,6 +91,8 @@ function migrar(guardado: Partial<Orcamento> | undefined): Orcamento {
   if (!Array.isArray(orcamento.saldos)) orcamento.saldos = []
   if (!Array.isArray(orcamento.compromissos)) orcamento.compromissos = []
   if (!Array.isArray(orcamento.revisoes)) orcamento.revisoes = []
+  if (!Array.isArray(orcamento.regras)) orcamento.regras = []
+  if (!Array.isArray(orcamento.linhasIgnoradas)) orcamento.linhasIgnoradas = []
   if (typeof orcamento.almofadaAlvo !== 'number') orcamento.almofadaAlvo = base.almofadaAlvo
   // Fotografias antigas não tinham certificados; a reserva em reais foi removida.
   orcamento.saldos = orcamento.saldos.map((s) => {
