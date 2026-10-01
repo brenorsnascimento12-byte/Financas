@@ -1309,3 +1309,27 @@ thead th {
   background: transparent;
   padding: 4px 4px 0;
 }
+
+/* ---------- Conferência de extrato ---------- */
+
+.cartao--conferencia {
+  border-color: color-mix(in srgb, var(--serie-1) 35%, var(--border));
+  margin-bottom: 18px;
+}
+
+.escolha-categoria {
+  flex-shrink: 0;
+  max-width: 140px;
+  background: var(--plane);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 12px;
+  padding: 6px 8px;
+}
+
+.escolha-categoria:focus-visible {
+  outline: 2px solid var(--serie-1);
+  outline-offset: 1px;
+}

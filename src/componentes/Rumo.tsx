@@ -14,6 +14,7 @@ import {
 } from '../lib/orcamento'
 import { novoId } from '../lib/armazenamento'
 import { dataCurta, eur } from '../lib/formato'
+import { Conferencia } from './Conferencia'
 import { GraficoPatrimonio } from './GraficoPatrimonio'
 import { Historico } from './Historico'
 
@@ -46,6 +47,7 @@ export function Rumo({ orcamento, resumos, alvoPoupanca, aoMudar }: Props) {
   const [liquidez, setLiquidez] = useState('')
   const [certificados, setCertificados] = useState('')
   const [dataSaldo, setDataSaldo] = useState(hojeISO())
+  const [aConferir, setAConferir] = useState(false)
 
   const [valorAporte, setValorAporte] = useState('')
   const [destinoAporte, setDestinoAporte] = useState<Destino>('certificados')
@@ -179,6 +181,23 @@ export function Rumo({ orcamento, resumos, alvoPoupanca, aoMudar }: Props) {
 
       <section className="cartao">
         <h2>Fecho do mês</h2>
+
+        {aConferir ? (
+          <Conferencia
+            orcamento={orcamento}
+            aoMudar={aoMudar}
+            aoFechar={() => setAConferir(false)}
+          />
+        ) : (
+          <button
+            type="button"
+            className="botao"
+            style={{ marginBottom: 18 }}
+            onClick={() => setAConferir(true)}
+          >
+            Conferir extrato
+          </button>
+        )}
 
         <form className="registo" onSubmit={registarSaldo}>
           <p className="etiqueta-bloco">Fotografia dos saldos</p>

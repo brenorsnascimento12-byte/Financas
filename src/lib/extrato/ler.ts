@@ -12,7 +12,13 @@ export async function lerPdf(ficheiro: File): Promise<string[]> {
   pdfjs.GlobalWorkerOptions.workerSrc = worker.default
 
   const dados = await ficheiro.arrayBuffer()
-  const documento = await pdfjs.getDocument({ data: dados }).promise
+  let documento
+  try {
+    documento = await pdfjs.getDocument({ data: dados }).promise
+  } catch {
+    // Sem mensagens cruas da pdf.js, em inglês, à frente do utilizador.
+    throw new Error('Este ficheiro não é um PDF válido, ou está danificado.')
+  }
 
   const linhas: string[] = []
   for (let n = 1; n <= documento.numPages; n++) {

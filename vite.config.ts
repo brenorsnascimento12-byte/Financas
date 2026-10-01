@@ -9,6 +9,25 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        // A pdfjs pesa 2,5 MB entre o módulo e o worker. Pré-carregá-la obrigaria
+        // toda a gente a descarregá-la à instalação, por causa de uma importação
+        // que acontece uma vez por mês — e o worker excede o limite do workbox,
+        // por isso nem sequer ficaria disponível offline. Fica fora do precache e
+        // é guardada em cache depois do primeiro uso: a primeira importação
+        // precisa de rede, as seguintes não.
+        globIgnores: ['**/pdf*.{js,mjs}'],
+        runtimeCaching: [
+          {
+            urlPattern: new RegExp('/assets/pdf.*\\.m?js$'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'leitor-pdf',
+              expiration: { maxEntries: 4 },
+            },
+          },
+        ],
+      },
       includeAssets: ['icone.svg', 'icone-192.png', 'icone-512.png'],
       manifest: {
         name: 'Finanças',
