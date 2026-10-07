@@ -1333,3 +1333,19 @@ thead th {
   outline: 2px solid var(--serie-1);
   outline-offset: 1px;
 }
+
+/* Diagnóstico da leitura do extrato: texto cru, para se ver o que saiu do PDF. */
+.diagnostico {
+  margin: 12px 0 0;
+  padding: 10px;
+  max-height: 320px;
+  overflow: auto;
+  background: var(--plane);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre;
+  color: var(--text-secondary);
+}

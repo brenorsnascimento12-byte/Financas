@@ -42,12 +42,20 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
   const [analise, setAnalise] = useState<ResultadoAnalise | null>(null)
   const [cruzamento, setCruzamento] = useState<Cruzamento | null>(null)
   const [decisoes, setDecisoes] = useState<Record<string, Decisao>>({})
+  /**
+   * O que a pdf.js extraiu, guardado mesmo quando a análise falha. Sem isto, uma
+   * recusa não diz nada: não se sabe se o texto saiu mal do PDF ou se saiu bem e
+   * foram os padrões que não bateram.
+   */
+  const [linhasLidas, setLinhasLidas] = useState<string[]>([])
 
   const importar = async (ficheiro: File) => {
     setErro(null)
     setALer(true)
+    setLinhasLidas([])
     try {
       const linhas = await lerPdf(ficheiro)
+      setLinhasLidas(linhas)
       const r = analisarExtrato(linhas)
       const classificados = classificar(r.movimentos, orcamento.regras)
       // As linhas já mandadas ignorar não voltam a aparecer.
@@ -140,10 +148,39 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
       )}
 
       {erro && (
-        <p className="deriva deriva--sobe" style={{ marginTop: 12 }}>
-          <span aria-hidden="true">▲ </span>
-          {erro}
-        </p>
+        <>
+          <p className="deriva deriva--sobe" style={{ marginTop: 12 }}>
+            <span aria-hidden="true">▲ </span>
+            {erro}
+          </p>
+
+          {linhasLidas.length > 0 && (
+            <details className="dobravel" style={{ marginTop: 12 }}>
+              <summary>Ver o que foi lido ({linhasLidas.length} linhas)</summary>
+              <div className="dobravel-corpo">
+                <p className="rodape">
+                  O leitor procura uma linha com <code>EXTRATO DE AAAA/MM/DD A AAAA/MM/DD</code> e
+                  outra com <code>SALDO INICIAL</code> seguido de um valor. Vê abaixo como o texto
+                  saiu do PDF — se essas linhas lá estiverem com outra forma, é o padrão que
+                  precisa de mudar.
+                </p>
+                <button
+                  type="button"
+                  className="botao"
+                  onClick={() => void navigator.clipboard?.writeText(linhasLidas.join('\n'))}
+                >
+                  Copiar as linhas
+                </button>
+                <pre className="diagnostico">
+                  {linhasLidas
+                    .slice(0, 40)
+                    .map((l, i) => `${String(i + 1).padStart(3, ' ')}  ${l}`)
+                    .join('\n')}
+                </pre>
+              </div>
+            </details>
+          )}
+        </>
       )}
 
       {cruzamento && analise && (
