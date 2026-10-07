@@ -1349,3 +1349,8 @@ thead th {
   white-space: pre;
   color: var(--text-secondary);
 }
+
+/* Um crédito na fila de conferência: lê-se logo que não é gasto. */
+.valor--credito {
+  color: var(--serie-3);
+}

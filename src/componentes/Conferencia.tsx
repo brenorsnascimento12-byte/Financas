@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import type { Despesa, Orcamento, Regra } from '../types'
+import type { Orcamento } from '../types'
 import { lerPdf } from '../lib/extrato/ler'
 import { analisarExtrato, type ResultadoAnalise } from '../lib/extrato/analisar'
 import { classificar } from '../lib/extrato/classificar'
 import { cruzar, type Cruzamento, type RegistoApp } from '../lib/extrato/cruzar'
+import { aplicarDecisoes, type Decisao } from '../lib/extrato/decidir'
 import { novoId } from '../lib/armazenamento'
 import { dataCurta, eur } from '../lib/formato'
 
@@ -12,11 +13,6 @@ interface Props {
   aoMudar: (patch: Partial<Orcamento>) => void
   aoFechar: () => void
 }
-
-/** O que o utilizador decidiu para um movimento em falta. */
-type Decisao =
-  | { tipo: 'despesa'; categoriaId: string }
-  | { tipo: 'ignorar' }
 
 /** Os registos da app que o cruzamento compara com o extrato. */
 function registosDa(orcamento: Orcamento): RegistoApp[] {
@@ -76,44 +72,16 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
 
   const escrever = () => {
     if (!cruzamento) return
-    const despesasNovas: Despesa[] = []
-    const regrasNovas: Regra[] = [...orcamento.regras]
-    const ignoradas = [...orcamento.linhasIgnoradas]
-
-    for (const c of cruzamento.emFalta) {
-      const d = decisoes[c.movimento.id] ?? { tipo: 'ignorar' as const }
-      if (d.tipo === 'ignorar') {
-        ignoradas.push(c.movimento.id)
-        continue
-      }
-      // A compra e as suas comissões ficam registos separados, na mesma
-      // categoria, para os totais não mentirem.
-      for (const parte of [c.movimento, ...c.comissoes]) {
-        despesasNovas.push({
-          id: novoId(),
-          data: parte.data,
-          valor: parte.valor,
-          categoriaId: d.categoriaId,
-          nota: parte.chave,
-        })
-      }
-      if (!regrasNovas.some((r) => r.padrao === c.movimento.chave)) {
-        regrasNovas.push({
-          id: novoId(),
-          padrao: c.movimento.chave,
-          tipo: 'despesa',
-          categoriaId: d.categoriaId,
-        })
-      }
-    }
-
+    const r = aplicarDecisoes(cruzamento.emFalta, decisoes, orcamento.regras, novoId)
     aoMudar({
-      despesas: [...orcamento.despesas, ...despesasNovas],
-      regras: regrasNovas,
-      linhasIgnoradas: ignoradas,
+      despesas: [...orcamento.despesas, ...r.despesas],
+      regras: [...orcamento.regras, ...r.regras],
+      linhasIgnoradas: [...orcamento.linhasIgnoradas, ...r.linhasIgnoradas],
+      ...(r.rendimentoMensal !== undefined ? { rendimentoMensal: r.rendimentoMensal } : {}),
     })
     aoFechar()
   }
+
 
   const aEscrever = Object.values(decisoes).filter((d) => d.tipo === 'despesa').length
 
@@ -214,6 +182,7 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
             <ul className="lista-despesas">
               {cruzamento.emFalta.map((c) => {
                 const d = decisoes[c.movimento.id]
+                const credito = c.movimento.sinal === 'credito'
                 const comissoes = c.comissoes.reduce((s, x) => s + x.valor, 0)
                 return (
                   <li key={c.movimento.id}>
@@ -224,29 +193,55 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
                       )}
                     </span>
                     <span className="lista-data">{dataCurta(c.movimento.data).slice(0, 5)}</span>
-                    <span className="lista-valor">{eur(c.movimento.valor)}</span>
-                    <select
-                      className="escolha-categoria"
-                      aria-label={`Categoria de ${c.movimento.chave}`}
-                      value={d?.tipo === 'despesa' ? d.categoriaId : ''}
-                      onChange={(e) =>
-                        setDecisoes((anterior) => ({
-                          ...anterior,
-                          [c.movimento.id]: e.target.value
-                            ? { tipo: 'despesa', categoriaId: e.target.value }
-                            : { tipo: 'ignorar' },
-                        }))
-                      }
-                    >
-                      <option value="">Ignorar</option>
-                      {orcamento.categorias
-                        .filter((cat) => !cat.arquivada)
-                        .map((cat) => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.nome}
-                          </option>
-                        ))}
-                    </select>
+                    <span className={`lista-valor ${credito ? 'valor--credito' : ''}`}>
+                      {credito ? '+' : ''}
+                      {eur(c.movimento.valor)}
+                    </span>
+
+                    {credito ? (
+                      // Um crédito não é despesa nenhuma. Oferecer-lhe categorias
+                      // de gasto era um toque errado à espera de acontecer.
+                      <select
+                        className="escolha-categoria"
+                        aria-label={`O que fazer com ${c.movimento.chave}`}
+                        value={d?.tipo === 'rendimento' ? 'rendimento' : ''}
+                        onChange={(e) =>
+                          setDecisoes((anterior) => ({
+                            ...anterior,
+                            [c.movimento.id]:
+                              e.target.value === 'rendimento'
+                                ? { tipo: 'rendimento' }
+                                : { tipo: 'ignorar' },
+                          }))
+                        }
+                      >
+                        <option value="">Ignorar</option>
+                        <option value="rendimento">É o meu rendimento</option>
+                      </select>
+                    ) : (
+                      <select
+                        className="escolha-categoria"
+                        aria-label={`Categoria de ${c.movimento.chave}`}
+                        value={d?.tipo === 'despesa' ? d.categoriaId : ''}
+                        onChange={(e) =>
+                          setDecisoes((anterior) => ({
+                            ...anterior,
+                            [c.movimento.id]: e.target.value
+                              ? { tipo: 'despesa', categoriaId: e.target.value }
+                              : { tipo: 'ignorar' },
+                          }))
+                        }
+                      >
+                        <option value="">Ignorar</option>
+                        {orcamento.categorias
+                          .filter((cat) => !cat.arquivada)
+                          .map((cat) => (
+                            <option key={cat.id} value={cat.id}>
+                              {cat.nome}
+                            </option>
+                          ))}
+                      </select>
+                    )}
                   </li>
                 )
               })}
