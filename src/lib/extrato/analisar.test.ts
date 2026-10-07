@@ -90,7 +90,7 @@ describe('analisarExtrato', () => {
     expect(r.movimentos[1].valor).toBe(15.5)
   })
 
-  it('recusa quando não encontra o período', () => {
-    expect(() => analisarExtrato(['SALDO INICIAL 100.00'])).toThrow(/período/i)
+  it('recusa quando não encontra o cabeçalho', () => {
+    expect(() => analisarExtrato(['SALDO INICIAL 100.00'])).toThrow(/cabeçalho/i)
   })
 })
