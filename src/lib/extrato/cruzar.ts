@@ -29,6 +29,11 @@ const diasEntre = (a: string, b: string) => Math.abs(Date.parse(a) - Date.parse(
 export function cruzar(
   classificados: MovimentoClassificado[],
   registos: RegistoApp[],
+  /**
+   * Período que o extrato cobre. Sem ele, "só na app" devolveria todo o
+   * histórico — importar setembro faria agosto inteiro aparecer por conferir.
+   */
+  periodo?: { inicio: string; fim: string },
 ): Cruzamento {
   const porUsar = new Set(registos.map((r) => r.id))
   const cruzamento: Cruzamento = { conferidos: [], emFalta: [], soNaApp: [], ambiguos: [] }
@@ -60,6 +65,16 @@ export function cruzar(
     porUsar.delete(candidatos[0].id)
   }
 
-  cruzamento.soNaApp = registos.filter((r) => porUsar.has(r.id))
+  cruzamento.soNaApp = registos.filter((r) => {
+    if (!porUsar.has(r.id)) return false
+    if (!periodo) return true
+    // A janela alarga o período nas pontas, pela mesma razão que alarga o
+    // emparelhamento: a data de lançamento pode cair fora por uns dias.
+    return (
+      diasEntre(r.data, periodo.inicio) <= JANELA_DIAS ||
+      diasEntre(r.data, periodo.fim) <= JANELA_DIAS ||
+      (r.data >= periodo.inicio && r.data <= periodo.fim)
+    )
+  })
   return cruzamento
 }

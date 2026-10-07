@@ -100,3 +100,25 @@ describe('cruzar', () => {
     expect(r.conferidos).toHaveLength(1)
   })
 })
+
+describe('cruzar — período do extrato', () => {
+  it('não assinala registos de fora do período do extrato', () => {
+    // Importar setembro não pode fazer agosto inteiro aparecer como "só na app".
+    const r = cruzar(
+      [classificado('2026-09-10', 20)],
+      [registo('d1', '2026-09-10', 20), registo('antigo', '2026-08-03', 50)],
+      { inicio: '2026-09-01', fim: '2026-09-30' },
+    )
+    expect(r.conferidos).toHaveLength(1)
+    expect(r.soNaApp).toEqual([])
+  })
+
+  it('assinala registos dentro do período que não aparecem no extrato', () => {
+    const r = cruzar(
+      [classificado('2026-09-10', 20)],
+      [registo('d1', '2026-09-10', 20), registo('dinheiro', '2026-09-12', 7)],
+      { inicio: '2026-09-01', fim: '2026-09-30' },
+    )
+    expect(r.soNaApp.map((x) => x.id)).toEqual(['dinheiro'])
+  })
+})

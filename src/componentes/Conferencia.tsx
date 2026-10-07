@@ -5,6 +5,7 @@ import { analisarExtrato, type ResultadoAnalise } from '../lib/extrato/analisar'
 import { classificar } from '../lib/extrato/classificar'
 import { cruzar, type Cruzamento, type RegistoApp } from '../lib/extrato/cruzar'
 import { aplicarDecisoes, type Decisao } from '../lib/extrato/decidir'
+import { conciliar, type Conciliacao } from '../lib/extrato/conciliar'
 import { novoId } from '../lib/armazenamento'
 import { dataCurta, eur } from '../lib/formato'
 
@@ -37,6 +38,7 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
   const [aLer, setALer] = useState(false)
   const [analise, setAnalise] = useState<ResultadoAnalise | null>(null)
   const [cruzamento, setCruzamento] = useState<Cruzamento | null>(null)
+  const [conta, setConta] = useState<Conciliacao | null>(null)
   const [decisoes, setDecisoes] = useState<Record<string, Decisao>>({})
   /**
    * O que a pdf.js extraiu, guardado mesmo quando a análise falha. Sem isto, uma
@@ -54,17 +56,21 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
       setLinhasLidas(linhas)
       const r = analisarExtrato(linhas)
       const classificados = classificar(r.movimentos, orcamento.regras)
-      // As linhas já mandadas ignorar não voltam a aparecer.
+      // As linhas já mandadas ignorar não voltam a aparecer na fila, mas entram
+      // na conta de controlo: senão faltaria explicar para onde foram.
       const porConferir = classificados.filter(
         (c) => !orcamento.linhasIgnoradas.includes(c.movimento.id),
       )
+      const x = cruzar(porConferir, registosDa(orcamento), r.periodo)
       setAnalise(r)
-      setCruzamento(cruzar(porConferir, registosDa(orcamento)))
+      setCruzamento(x)
+      setConta(conciliar(classificados, orcamento.linhasIgnoradas, x))
       setDecisoes({})
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Não consegui ler o extrato.')
       setAnalise(null)
       setCruzamento(null)
+      setConta(null)
     } finally {
       setALer(false)
     }
@@ -173,6 +179,49 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
               </div>
             )}
           </dl>
+
+          {conta && (
+            <div className="conta-controlo">
+              <p className="etiqueta-bloco">Conta de controlo</p>
+              <dl>
+                <div>
+                  <dt>Saiu da conta no extrato</dt>
+                  <dd>{eur(conta.saidasExtrato)}</dd>
+                </div>
+                <div>
+                  <dt>Já registado na app</dt>
+                  <dd>{eur(conta.conferido)}</dd>
+                </div>
+                <div>
+                  <dt>Por decidir aqui</dt>
+                  <dd>{eur(conta.emFalta)}</dd>
+                </div>
+                <div>
+                  <dt>Ignorado por ti antes</dt>
+                  <dd>{eur(conta.ignorado)}</dd>
+                </div>
+              </dl>
+
+              <p className={conta.bate ? 'conta-fecha' : 'deriva deriva--sobe'}>
+                {conta.bate ? (
+                  <>Tudo contabilizado: as três parcelas somam o total do extrato.</>
+                ) : (
+                  <>
+                    <span aria-hidden="true">▲ </span>
+                    Faltam {eur(Math.abs(conta.diferenca))} por explicar. O cruzamento perdeu
+                    alguma linha — não escrevas nada e diz-me.
+                  </>
+                )}
+              </p>
+
+              {conta.soNaApp > 0 && (
+                <p className="rodape">
+                  Tens {eur(conta.soNaApp)} em despesas registadas neste período que não aparecem
+                  no extrato. Pode ser dinheiro vivo — ou algo registado duas vezes.
+                </p>
+              )}
+            </div>
+          )}
 
           {cruzamento.emFalta.length === 0 ? (
             <p className="rodape">
