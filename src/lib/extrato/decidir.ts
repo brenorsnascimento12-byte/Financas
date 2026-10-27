@@ -72,7 +72,9 @@ export function aplicarDecisoes(
   let rendimentoMensal: number | undefined
 
   for (const c of emFalta) {
-    const decisao = decisoes[c.movimento.id] ?? { tipo: 'ignorar' as const }
+    const decisao = decisoes[c.movimento.id]
+    // Sem decisão, a linha fica por decidir e volta na próxima importação.
+    if (!decisao) continue
     const credito = c.movimento.sinal === 'credito'
 
     if (decisao.tipo === 'rendimento') {

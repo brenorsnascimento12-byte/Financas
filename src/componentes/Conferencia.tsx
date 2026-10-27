@@ -4,7 +4,11 @@ import { lerPdf } from '../lib/extrato/ler'
 import { lerExcel } from '../lib/extrato/lerExcel'
 import { analisarExtrato, type ResultadoAnalise } from '../lib/extrato/analisar'
 import { analisarFolha } from '../lib/extrato/analisarExcel'
-import { classificar, ehTransferencia } from '../lib/extrato/classificar'
+import {
+  classificar,
+  ehTransferencia,
+  type MovimentoClassificado,
+} from '../lib/extrato/classificar'
 import { cruzar, type Cruzamento, type RegistoApp } from '../lib/extrato/cruzar'
 import { aplicarDecisoes, decisoesSugeridas, type Decisao } from '../lib/extrato/decidir'
 import { conciliar, type Conciliacao } from '../lib/extrato/conciliar'
@@ -47,6 +51,9 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
   const [cruzamento, setCruzamento] = useState<Cruzamento | null>(null)
   const [conta, setConta] = useState<Conciliacao | null>(null)
   const [decisoes, setDecisoes] = useState<Record<string, Decisao>>({})
+  /** Linhas deste extrato que foram mandadas ignorar em importações anteriores. */
+  const [ignoradasAqui, setIgnoradasAqui] = useState<string[]>([])
+  const [classificadosAtuais, setClassificadosAtuais] = useState<MovimentoClassificado[]>([])
   /**
    * O que a pdf.js extraiu, guardado mesmo quando a análise falha. Sem isto, uma
    * recusa não diz nada: não se sabe se o texto saiu mal do PDF ou se saiu bem e
@@ -68,17 +75,9 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
         r = analisarExtrato(linhas)
       }
       const classificados = classificar(r.movimentos, orcamento.regras)
-      // As linhas já mandadas ignorar não voltam a aparecer na fila, mas entram
-      // na conta de controlo: senão faltaria explicar para onde foram.
-      const porConferir = classificados.filter(
-        (c) => !orcamento.linhasIgnoradas.includes(c.movimento.id),
-      )
-      const x = cruzar(porConferir, registosDa(orcamento), r.periodo)
       setAnalise(r)
-      setCruzamento(x)
-      setConta(conciliar(classificados, orcamento.linhasIgnoradas, x))
-      // A fila abre com as categorias que as regras sugerem já escolhidas.
-      setDecisoes(decisoesSugeridas(x.emFalta, orcamento.categorias))
+      setClassificadosAtuais(classificados)
+      montarFila(classificados, r, orcamento.linhasIgnoradas)
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Não consegui ler o extrato.')
       setAnalise(null)
@@ -87,6 +86,32 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
     } finally {
       setALer(false)
     }
+  }
+
+  const montarFila = (
+    classificados: MovimentoClassificado[],
+    r: ResultadoAnalise,
+    ignoradas: string[],
+  ) => {
+    // As linhas já mandadas ignorar não voltam a aparecer na fila, mas entram
+    // na conta de controlo: senão faltaria explicar para onde foram.
+    const porConferir = classificados.filter((c) => !ignoradas.includes(c.movimento.id))
+    const x = cruzar(porConferir, registosDa(orcamento), r.periodo)
+    setCruzamento(x)
+    setConta(conciliar(classificados, ignoradas, x))
+    setIgnoradasAqui(
+      classificados.map((c) => c.movimento.id).filter((id) => ignoradas.includes(id)),
+    )
+    // A fila abre com as categorias que as regras sugerem já escolhidas.
+    setDecisoes(decisoesSugeridas(x.emFalta, orcamento.categorias))
+  }
+
+  /** Desfaz um "ignorar": as linhas deste extrato voltam à fila. */
+  const reporIgnoradas = () => {
+    if (!analise) return
+    const restantes = orcamento.linhasIgnoradas.filter((id) => !ignoradasAqui.includes(id))
+    aoMudar({ linhasIgnoradas: restantes })
+    montarFila(classificadosAtuais, analise, restantes)
   }
 
   const escrever = () => {
@@ -106,9 +131,10 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
   }
 
 
-  const aEscrever = Object.values(decisoes).filter(
-    (d) => d.tipo === 'despesa' || d.tipo === 'reembolso',
-  ).length
+  const decididas = cruzamento
+    ? cruzamento.emFalta.filter((c) => decisoes[c.movimento.id]).length
+    : 0
+  const porDecidir = (cruzamento?.emFalta.length ?? 0) - decididas
   const categoriasAtivas = orcamento.categorias.filter((cat) => !cat.arquivada)
 
   return (
@@ -243,6 +269,20 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
             </div>
           )}
 
+          {ignoradasAqui.length > 0 && (
+            <div className="repor-ignoradas">
+              <p className="rodape">
+                {ignoradasAqui.length === 1
+                  ? '1 linha deste extrato está a ser ignorada.'
+                  : `${ignoradasAqui.length} linhas deste extrato estão a ser ignoradas.`}{' '}
+                Se ignoraste alguma sem querer, podes trazê-las de volta à fila.
+              </p>
+              <button type="button" className="botao" onClick={reporIgnoradas}>
+                Voltar a mostrar as ignoradas
+              </button>
+            </div>
+          )}
+
           {cruzamento.emFalta.length === 0 ? (
             <p className="rodape">
               Está tudo conferido. Nada a acrescentar.
@@ -282,22 +322,31 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
                             ? 'rendimento'
                             : d?.tipo === 'reembolso'
                               ? `reembolso:${d.categoriaId}`
-                              : ''
+                              : d?.tipo === 'ignorar'
+                                ? 'ignorar'
+                                : ''
                         }
                         onChange={(e) => {
                           const v = e.target.value
-                          setDecisoes((anterior) => ({
-                            ...anterior,
-                            [c.movimento.id]:
-                              v === 'rendimento'
-                                ? { tipo: 'rendimento' }
-                                : v.startsWith('reembolso:')
-                                  ? { tipo: 'reembolso', categoriaId: v.slice('reembolso:'.length) }
-                                  : { tipo: 'ignorar' },
-                          }))
+                          setDecisoes((anterior) => {
+                            const novo = { ...anterior }
+                            if (v === '') delete novo[c.movimento.id]
+                            else
+                              novo[c.movimento.id] =
+                                v === 'rendimento'
+                                  ? { tipo: 'rendimento' }
+                                  : v === 'ignorar'
+                                    ? { tipo: 'ignorar' }
+                                    : {
+                                        tipo: 'reembolso',
+                                        categoriaId: v.slice('reembolso:'.length),
+                                      }
+                            return novo
+                          })
                         }}
                       >
-                        <option value="">Ignorar</option>
+                        <option value="">Por decidir</option>
+                        <option value="ignorar">Ignorar sempre</option>
                         <option value="rendimento">É o meu rendimento</option>
                         <optgroup label="Reembolso — abate em">
                           {categoriasAtivas.map((cat) => (
@@ -311,24 +360,28 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
                       <select
                         className="escolha-categoria"
                         aria-label={`Categoria de ${c.movimento.chave}`}
-                        value={d?.tipo === 'despesa' ? d.categoriaId : ''}
+                        value={
+                          d?.tipo === 'despesa' ? d.categoriaId : d?.tipo === 'ignorar' ? '__ignorar' : ''
+                        }
                         onChange={(e) =>
                           setDecisoes((anterior) => {
                             const antes = anterior[c.movimento.id]
-                            return {
-                              ...anterior,
-                              [c.movimento.id]: e.target.value
-                                ? {
-                                    tipo: 'despesa',
-                                    categoriaId: e.target.value,
-                                    lembrar: antes?.tipo === 'despesa' ? antes.lembrar : undefined,
-                                  }
-                                : { tipo: 'ignorar' },
-                            }
+                            const v = e.target.value
+                            const novo = { ...anterior }
+                            if (v === '') delete novo[c.movimento.id]
+                            else if (v === '__ignorar') novo[c.movimento.id] = { tipo: 'ignorar' }
+                            else
+                              novo[c.movimento.id] = {
+                                tipo: 'despesa',
+                                categoriaId: v,
+                                lembrar: antes?.tipo === 'despesa' ? antes.lembrar : undefined,
+                              }
+                            return novo
                           })
                         }
                       >
-                        <option value="">Ignorar</option>
+                        <option value="">Por decidir</option>
+                        <option value="__ignorar">Ignorar sempre</option>
                         {categoriasAtivas.map((cat) => (
                           <option key={cat.id} value={cat.id}>
                             {cat.nome}
@@ -367,8 +420,16 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
               style={{ marginTop: 16 }}
               onClick={escrever}
             >
-              Escrever {aEscrever} {aEscrever === 1 ? 'registo' : 'registos'}
+              Gravar {decididas} {decididas === 1 ? 'decisão' : 'decisões'}
             </button>
+          )}
+
+          {porDecidir > 0 && (
+            <p className="rodape" style={{ marginTop: 8 }}>
+              {porDecidir === 1
+                ? 'A linha por decidir não é gravada: volta na próxima importação.'
+                : `As ${porDecidir} linhas por decidir não são gravadas: voltam na próxima importação.`}
+            </p>
           )}
 
           <p className="rodape" style={{ marginTop: 14 }}>

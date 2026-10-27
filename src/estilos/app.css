@@ -1425,3 +1425,12 @@ thead th {
 .conta-fecha {
   color: var(--success-text);
 }
+
+/* Aviso de linhas ignoradas, com o botão para as repor. */
+.repor-ignoradas {
+  margin: 14px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}

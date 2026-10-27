@@ -29,10 +29,12 @@ describe('aplicarDecisoes', () => {
     expect(r.linhasIgnoradas).toEqual(['m1'])
   })
 
-  it('trata a ausência de decisão como ignorar', () => {
+  it('sem decisão, a linha fica por decidir: não grava nem silencia', () => {
+    // Carregar em "Escrever" com linhas por tratar não as pode fazer desaparecer
+    // para sempre — só um "Ignorar" escolhido de propósito silencia.
     const r = aplicarDecisoes([item({ id: 'm1' })], {}, [], idFixo)
     expect(r.despesas).toEqual([])
-    expect(r.linhasIgnoradas).toEqual(['m1'])
+    expect(r.linhasIgnoradas).toEqual([])
   })
 
   it('cria a despesa com o valor e a data do movimento', () => {
