@@ -105,6 +105,12 @@ export interface Regra {
   tipo: TipoMovimento | 'ignorar'
   /** Obrigatório quando tipo === 'despesa'. */
   categoriaId?: string
+  /**
+   * Pedida de propósito na triagem ("lembrar"). Nas transferências só estas
+   * pré-preenchem a categoria: o mesmo destinatário pode receber dinheiro por
+   * motivos diferentes, e uma regra aprendida em silêncio adivinharia mal.
+   */
+  explicita?: boolean
 }
 
 /** Uma linha do extrato. Nunca é persistida: vive só durante a triagem. */

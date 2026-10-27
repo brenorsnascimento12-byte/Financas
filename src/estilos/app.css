@@ -1329,6 +1329,32 @@ thead th {
   padding: 6px 8px;
 }
 
+.cartao--conferencia .lista-despesas li {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+/* No telemóvel o descritivo não cabe ao lado do seletor: fica numa linha só
+   dele, e data, valor e categoria vão para a de baixo. */
+.cartao--conferencia .lista-principal {
+  flex-basis: 100%;
+}
+
+.cartao--conferencia .lista-valor {
+  margin-right: auto;
+}
+
+/* Caixa "usar sempre esta categoria": numa linha própria, por baixo do movimento. */
+.lembrar {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
 .escolha-categoria:focus-visible {
   outline: 2px solid var(--serie-1);
   outline-offset: 1px;

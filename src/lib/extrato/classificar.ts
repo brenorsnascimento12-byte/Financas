@@ -11,7 +11,8 @@ export interface MovimentoClassificado {
 
 const COMISSOES = ['IMPOSTO DO SELO', 'CUSTO DE SERVICO INTERNACIONAL', 'COMISSAO']
 const ehComissao = (m: MovimentoExtrato) => COMISSOES.some((c) => m.chave.includes(c))
-const ehTransferencia = (m: MovimentoExtrato) =>
+/** Transferências e MB WAY: o descritivo diz a quem, nunca porquê. */
+export const ehTransferencia = (m: Pick<MovimentoExtrato, 'chave'>) =>
   m.chave.startsWith('TRF') || m.chave.includes('MB WAY')
 
 /**
@@ -41,7 +42,12 @@ export function classificar(
       continue
     }
 
-    const regra = regras.find((r) => r.padrao !== '' && m.chave.includes(r.padrao))
+    // Nas transferências só contam as regras pedidas de propósito: o mesmo
+    // destinatário recebe por motivos diferentes de mês para mês.
+    const transferencia = ehTransferencia(m)
+    const regra = regras.find(
+      (r) => r.padrao !== '' && m.chave.includes(r.padrao) && (!transferencia || r.explicita),
+    )
     if (regra) {
       resultado.push({
         movimento: m,

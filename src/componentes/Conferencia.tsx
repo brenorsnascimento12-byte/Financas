@@ -1,13 +1,20 @@
 import { useState } from 'react'
 import type { Orcamento } from '../types'
 import { lerPdf } from '../lib/extrato/ler'
+import { lerExcel } from '../lib/extrato/lerExcel'
 import { analisarExtrato, type ResultadoAnalise } from '../lib/extrato/analisar'
-import { classificar } from '../lib/extrato/classificar'
+import { analisarFolha } from '../lib/extrato/analisarExcel'
+import { classificar, ehTransferencia } from '../lib/extrato/classificar'
 import { cruzar, type Cruzamento, type RegistoApp } from '../lib/extrato/cruzar'
-import { aplicarDecisoes, type Decisao } from '../lib/extrato/decidir'
+import { aplicarDecisoes, decisoesSugeridas, type Decisao } from '../lib/extrato/decidir'
 import { conciliar, type Conciliacao } from '../lib/extrato/conciliar'
 import { novoId } from '../lib/armazenamento'
-import { dataCurta, eur } from '../lib/formato'
+import { dataCurta, eur, eurExato } from '../lib/formato'
+
+/** O ActivoBank dá o extrato mensal em PDF e os movimentos de qualquer período em Excel. */
+const ehExcel = (f: File) =>
+  /\.xlsx$/i.test(f.name) ||
+  f.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 interface Props {
   orcamento: Orcamento
@@ -52,9 +59,14 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
     setALer(true)
     setLinhasLidas([])
     try {
-      const linhas = await lerPdf(ficheiro)
-      setLinhasLidas(linhas)
-      const r = analisarExtrato(linhas)
+      let r: ResultadoAnalise
+      if (ehExcel(ficheiro)) {
+        r = analisarFolha(await lerExcel(ficheiro))
+      } else {
+        const linhas = await lerPdf(ficheiro)
+        setLinhasLidas(linhas)
+        r = analisarExtrato(linhas)
+      }
       const classificados = classificar(r.movimentos, orcamento.regras)
       // As linhas já mandadas ignorar não voltam a aparecer na fila, mas entram
       // na conta de controlo: senão faltaria explicar para onde foram.
@@ -65,7 +77,8 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
       setAnalise(r)
       setCruzamento(x)
       setConta(conciliar(classificados, orcamento.linhasIgnoradas, x))
-      setDecisoes({})
+      // A fila abre com as categorias que as regras sugerem já escolhidas.
+      setDecisoes(decisoesSugeridas(x.emFalta, orcamento.categorias))
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Não consegui ler o extrato.')
       setAnalise(null)
@@ -81,7 +94,11 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
     const r = aplicarDecisoes(cruzamento.emFalta, decisoes, orcamento.regras, novoId)
     aoMudar({
       despesas: [...orcamento.despesas, ...r.despesas],
-      regras: [...orcamento.regras, ...r.regras],
+      // Uma regra atualizada traz o id da antiga e substitui-a.
+      regras: [
+        ...orcamento.regras.filter((x) => !r.regras.some((n) => n.id === x.id)),
+        ...r.regras,
+      ],
       linhasIgnoradas: [...orcamento.linhasIgnoradas, ...r.linhasIgnoradas],
       ...(r.rendimentoMensal !== undefined ? { rendimentoMensal: r.rendimentoMensal } : {}),
     })
@@ -89,7 +106,10 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
   }
 
 
-  const aEscrever = Object.values(decisoes).filter((d) => d.tipo === 'despesa').length
+  const aEscrever = Object.values(decisoes).filter(
+    (d) => d.tipo === 'despesa' || d.tipo === 'reembolso',
+  ).length
+  const categoriasAtivas = orcamento.categorias.filter((cat) => !cat.arquivada)
 
   return (
     <section className="cartao cartao--conferencia">
@@ -104,8 +124,8 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
         <>
           <input
             type="file"
-            accept="application/pdf,.pdf"
-            aria-label="Extrato em PDF"
+            accept="application/pdf,.pdf,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            aria-label="Extrato em PDF ou movimentos em Excel"
             disabled={aLer}
             onChange={(e) => {
               const f = e.target.files?.[0]
@@ -116,7 +136,7 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
           <p className="rodape" style={{ marginTop: 12 }}>
             {aLer
               ? 'A ler o extrato…'
-              : 'O PDF é lido no teu telemóvel e não é guardado nem enviado.'}
+              : 'Extrato mensal em PDF, ou movimentos de qualquer período em Excel (site do ActivoBank → Movimentos → Exportar para Excel). O ficheiro é lido no teu telemóvel e não é guardado nem enviado.'}
           </p>
         </>
       )}
@@ -232,19 +252,23 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
               {cruzamento.emFalta.map((c) => {
                 const d = decisoes[c.movimento.id]
                 const credito = c.movimento.sinal === 'credito'
+                const transferencia = ehTransferencia(c.movimento)
+                const sugerida =
+                  d?.tipo === 'despesa' && d.categoriaId === c.categoriaSugerida
                 const comissoes = c.comissoes.reduce((s, x) => s + x.valor, 0)
                 return (
                   <li key={c.movimento.id}>
                     <span className="lista-principal">
                       <span className="lista-nome">{c.movimento.chave}</span>
                       {comissoes > 0 && (
-                        <span className="lista-nota">mais {eur(comissoes)} de comissões</span>
+                        <span className="lista-nota">mais {eurExato(comissoes)} de comissões</span>
                       )}
+                      {sugerida && <span className="lista-nota">sugerido por regra</span>}
                     </span>
                     <span className="lista-data">{dataCurta(c.movimento.data).slice(0, 5)}</span>
                     <span className={`lista-valor ${credito ? 'valor--credito' : ''}`}>
                       {credito ? '+' : ''}
-                      {eur(c.movimento.valor)}
+                      {eurExato(c.movimento.valor)}
                     </span>
 
                     {credito ? (
@@ -253,19 +277,35 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
                       <select
                         className="escolha-categoria"
                         aria-label={`O que fazer com ${c.movimento.chave}`}
-                        value={d?.tipo === 'rendimento' ? 'rendimento' : ''}
-                        onChange={(e) =>
+                        value={
+                          d?.tipo === 'rendimento'
+                            ? 'rendimento'
+                            : d?.tipo === 'reembolso'
+                              ? `reembolso:${d.categoriaId}`
+                              : ''
+                        }
+                        onChange={(e) => {
+                          const v = e.target.value
                           setDecisoes((anterior) => ({
                             ...anterior,
                             [c.movimento.id]:
-                              e.target.value === 'rendimento'
+                              v === 'rendimento'
                                 ? { tipo: 'rendimento' }
-                                : { tipo: 'ignorar' },
+                                : v.startsWith('reembolso:')
+                                  ? { tipo: 'reembolso', categoriaId: v.slice('reembolso:'.length) }
+                                  : { tipo: 'ignorar' },
                           }))
-                        }
+                        }}
                       >
                         <option value="">Ignorar</option>
                         <option value="rendimento">É o meu rendimento</option>
+                        <optgroup label="Reembolso — abate em">
+                          {categoriasAtivas.map((cat) => (
+                            <option key={cat.id} value={`reembolso:${cat.id}`}>
+                              {cat.nome}
+                            </option>
+                          ))}
+                        </optgroup>
                       </select>
                     ) : (
                       <select
@@ -273,23 +313,46 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
                         aria-label={`Categoria de ${c.movimento.chave}`}
                         value={d?.tipo === 'despesa' ? d.categoriaId : ''}
                         onChange={(e) =>
-                          setDecisoes((anterior) => ({
-                            ...anterior,
-                            [c.movimento.id]: e.target.value
-                              ? { tipo: 'despesa', categoriaId: e.target.value }
-                              : { tipo: 'ignorar' },
-                          }))
+                          setDecisoes((anterior) => {
+                            const antes = anterior[c.movimento.id]
+                            return {
+                              ...anterior,
+                              [c.movimento.id]: e.target.value
+                                ? {
+                                    tipo: 'despesa',
+                                    categoriaId: e.target.value,
+                                    lembrar: antes?.tipo === 'despesa' ? antes.lembrar : undefined,
+                                  }
+                                : { tipo: 'ignorar' },
+                            }
+                          })
                         }
                       >
                         <option value="">Ignorar</option>
-                        {orcamento.categorias
-                          .filter((cat) => !cat.arquivada)
-                          .map((cat) => (
-                            <option key={cat.id} value={cat.id}>
-                              {cat.nome}
-                            </option>
-                          ))}
+                        {categoriasAtivas.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.nome}
+                          </option>
+                        ))}
                       </select>
+                    )}
+
+                    {/* Transferências: o motivo muda de vez para vez, por isso só se
+                        lembra o destinatário quando se pede (ex.: a boleia semanal). */}
+                    {!credito && transferencia && d?.tipo === 'despesa' && !sugerida && (
+                      <label className="lembrar">
+                        <input
+                          type="checkbox"
+                          checked={d.lembrar === true}
+                          onChange={(e) =>
+                            setDecisoes((anterior) => ({
+                              ...anterior,
+                              [c.movimento.id]: { ...d, lembrar: e.target.checked },
+                            }))
+                          }
+                        />
+                        Usar sempre esta categoria para este destinatário
+                      </label>
                     )}
                   </li>
                 )
@@ -304,7 +367,7 @@ export function Conferencia({ orcamento, aoMudar, aoFechar }: Props) {
               style={{ marginTop: 16 }}
               onClick={escrever}
             >
-              Escrever {aEscrever} {aEscrever === 1 ? 'despesa' : 'despesas'}
+              Escrever {aEscrever} {aEscrever === 1 ? 'registo' : 'registos'}
             </button>
           )}
 

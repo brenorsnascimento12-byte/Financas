@@ -64,10 +64,22 @@ describe('classificar', () => {
     expect(r.categoriaSugerida).toBe('cat-alim')
   })
 
-  it('a regra ganha à deteção de transferência', () => {
-    const regras: Regra[] = [{ id: 'r', padrao: 'TRF MB WAY P/ ALGUEM', tipo: 'aporte' }]
+  it('a regra explícita ganha à deteção de transferência', () => {
+    const regras: Regra[] = [
+      { id: 'r', padrao: 'TRF MB WAY P/ ALGUEM', tipo: 'aporte', explicita: true },
+    ]
     const [r] = classificar([mov({ chave: 'TRF MB WAY P/ ALGUEM' })], regras)
     expect(r.tipo).toBe('aporte')
+  })
+
+  it('numa transferência, ignora regras aprendidas em silêncio', () => {
+    // O mesmo destinatário recebe a quota do curso num mês e a sweat no outro.
+    const regras: Regra[] = [
+      { id: 'r', padrao: 'TRF MB WAY P/ ALGUEM', tipo: 'despesa', categoriaId: 'curso' },
+    ]
+    const [r] = classificar([mov({ chave: 'TRF MB WAY P/ ALGUEM' })], regras)
+    expect(r.tipo).toBe('transferencia')
+    expect(r.categoriaSugerida).toBeUndefined()
   })
 
   it('a comissão ganha à regra', () => {

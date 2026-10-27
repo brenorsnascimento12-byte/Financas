@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { MovimentoExtrato, Regra } from '../../types'
 import type { MovimentoClassificado } from './classificar'
-import { aplicarDecisoes, type Decisao } from './decidir'
+import { aplicarDecisoes, decisoesSugeridas, type Decisao } from './decidir'
 
 let contador = 0
 const idFixo = () => `id-${++contador}`
@@ -79,6 +79,68 @@ describe('aplicarDecisoes', () => {
     expect(r.regras).toEqual([])
   })
 
+  it('não aprende regra para MB WAY, a não ser que se peça', () => {
+    const mbway = item({ id: 'm1', chave: 'TRF MB WAY P/ MARIA' })
+    const semPedir = aplicarDecisoes(
+      [mbway],
+      { m1: { tipo: 'despesa', categoriaId: 'curso' } },
+      [],
+      idFixo,
+    )
+    expect(semPedir.despesas).toHaveLength(1)
+    expect(semPedir.regras).toEqual([])
+
+    const pedido = aplicarDecisoes(
+      [mbway],
+      { m1: { tipo: 'despesa', categoriaId: 'transporte', lembrar: true } },
+      [],
+      idFixo,
+    )
+    expect(pedido.regras[0]).toMatchObject({
+      padrao: 'TRF MB WAY P/ MARIA',
+      categoriaId: 'transporte',
+      explicita: true,
+    })
+  })
+
+  it('promove uma regra antiga de transferência quando se pede para lembrar', () => {
+    const existentes: Regra[] = [
+      { id: 'antiga', padrao: 'TRF MB WAY P/ MARIA', tipo: 'despesa', categoriaId: 'x' },
+    ]
+    const r = aplicarDecisoes(
+      [item({ id: 'm1', chave: 'TRF MB WAY P/ MARIA' })],
+      { m1: { tipo: 'despesa', categoriaId: 'transporte', lembrar: true } },
+      existentes,
+      idFixo,
+    )
+    expect(r.regras).toEqual([
+      { id: 'antiga', padrao: 'TRF MB WAY P/ MARIA', tipo: 'despesa', categoriaId: 'transporte', explicita: true },
+    ])
+  })
+
+  it('um reembolso abate na categoria e silencia a linha', () => {
+    const r = aplicarDecisoes(
+      [item({ id: 'm1', chave: 'TRF. P/O JOAO', valor: 20, sinal: 'credito' })],
+      { m1: { tipo: 'reembolso', categoriaId: 'transporte' } },
+      [],
+      idFixo,
+    )
+    expect(r.despesas).toHaveLength(1)
+    expect(r.despesas[0]).toMatchObject({ valor: -20, categoriaId: 'transporte' })
+    expect(r.linhasIgnoradas).toEqual(['m1'])
+    expect(r.regras).toEqual([])
+  })
+
+  it('um débito nunca é reembolso', () => {
+    const r = aplicarDecisoes(
+      [item({ id: 'm1', valor: 20 })],
+      { m1: { tipo: 'reembolso', categoriaId: 'transporte' } },
+      [],
+      idFixo,
+    )
+    expect(r.despesas).toEqual([])
+  })
+
   it('usar como rendimento devolve o valor e não cria despesa', () => {
     const d: Record<string, Decisao> = { m1: { tipo: 'rendimento' } }
     const r = aplicarDecisoes(
@@ -90,5 +152,28 @@ describe('aplicarDecisoes', () => {
     expect(r.despesas).toEqual([])
     expect(r.rendimentoMensal).toBe(556.04)
     expect(r.linhasIgnoradas).toEqual(['m1'])
+  })
+})
+
+describe('decisoesSugeridas', () => {
+  const categorias = [
+    { id: 'alim', nome: 'Alimentação', fatia: 'essencial' as const },
+    { id: 'velha', nome: 'Velha', fatia: 'essencial' as const, arquivada: true },
+  ]
+
+  it('pré-escolhe a categoria sugerida pela regra', () => {
+    const c: MovimentoClassificado = { ...item({ id: 'm1' }), categoriaSugerida: 'alim' }
+    expect(decisoesSugeridas([c], categorias)).toEqual({
+      m1: { tipo: 'despesa', categoriaId: 'alim' },
+    })
+  })
+
+  it('não sugere categorias arquivadas nem créditos', () => {
+    const arquivada: MovimentoClassificado = { ...item({ id: 'm1' }), categoriaSugerida: 'velha' }
+    const credito: MovimentoClassificado = {
+      ...item({ id: 'm2', sinal: 'credito' }),
+      categoriaSugerida: 'alim',
+    }
+    expect(decisoesSugeridas([arquivada, credito], categorias)).toEqual({})
   })
 })
