@@ -8,3 +8,8 @@ dist-ssr
 
 .DS_Store
 Thumbs.db
+
+# Exportações do banco e outros ficheiros de trabalho: são dados pessoais e
+# o repositório é público.
+Claude outputs/
+*.xlsx
