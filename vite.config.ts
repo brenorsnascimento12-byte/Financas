@@ -8,7 +8,11 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt' em vez de 'autoUpdate': com autoUpdate a versão nova entrava em
+      // silêncio na carga seguinte, e quem abria logo a seguir a uma publicação
+      // via a anterior sem perceber porquê. Assim a app diz que há versão nova e
+      // espera — recarregar sozinha a meio de se escrever uma despesa perdia-a.
+      registerType: 'prompt',
       workbox: {
         // A pdfjs pesa 2,5 MB entre o módulo e o worker. Pré-carregá-la obrigaria
         // toda a gente a descarregá-la à instalação, por causa de uma importação

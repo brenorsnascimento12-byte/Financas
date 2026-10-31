@@ -14,6 +14,7 @@ import {
 import { marcarAlteracoes, sincronizar } from './lib/sincronizar'
 import { ErroSync, lerRemoto } from './lib/github'
 import { LinhaEstadoSync, type EstadoSync } from './componentes/Sincronizacao'
+import { useRegisterSW } from 'virtual:pwa-register/react'
 import { alvoPoupanca, faltaFotografiaEsteMes, mesAtual, precisaRevisao, resumirMeses } from './lib/orcamento'
 import { Mes } from './componentes/Mes'
 import { Rumo } from './componentes/Rumo'
@@ -54,6 +55,14 @@ export default function App() {
   const [tema, setTema] = usarTema()
   const [token, setToken] = useState(lerToken)
   const [sync, setSync] = useState<EstadoSync>({ fase: 'inativo' })
+
+  // A versão nova fica à espera em vez de entrar sozinha: o service worker serve
+  // da cache para a app abrir sem rede, e sem este aviso quem abria logo a seguir
+  // a uma publicação via a versão anterior sem perceber porquê.
+  const {
+    needRefresh: [haVersaoNova],
+    updateServiceWorker,
+  } = useRegisterSW()
 
   useEffect(() => guardar(estado), [estado])
 
@@ -169,6 +178,15 @@ export default function App() {
       <header className="cabecalho">
         <h1>Finanças</h1>
         <div className="acoes">
+          {haVersaoNova && (
+            <button
+              type="button"
+              className="botao botao--novo"
+              onClick={() => void updateServiceWorker(true)}
+            >
+              Nova versão · Atualizar
+            </button>
+          )}
           <LinhaEstadoSync
             orcamento={estado.orcamento}
             estado={sync}

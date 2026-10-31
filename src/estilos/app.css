@@ -1804,3 +1804,12 @@ thead th {
   box-shadow: var(--sombra-elevada);
   border-color: var(--serie-1);
 }
+
+/* Aviso de versão nova. Visível sem ser alarme: a app continua a funcionar
+   na versão antiga até se carregar. */
+.botao--novo {
+  background: var(--good-wash);
+  border-color: color-mix(in srgb, var(--good) 35%, transparent);
+  color: var(--success-text);
+  font-weight: 600;
+}
