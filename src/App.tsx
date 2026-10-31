@@ -62,7 +62,21 @@ export default function App() {
   const {
     needRefresh: [haVersaoNova],
     updateServiceWorker,
-  } = useRegisterSW()
+  } = useRegisterSW({
+    onRegisteredSW(_url, registo) {
+      if (!registo) return
+      const procurar = () => {
+        if (navigator.onLine) void registo.update()
+      }
+      // Só à abertura não chegava: uma PWA no telemóvel fica dias sem ser
+      // fechada, e nunca saberia que há versão nova. Procura-se ao voltar ao
+      // ecrã e de hora a hora.
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) procurar()
+      })
+      setInterval(procurar, 60 * 60 * 1000)
+    },
+  })
 
   useEffect(() => guardar(estado), [estado])
 
