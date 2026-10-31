@@ -191,8 +191,10 @@ describe('sincronizar', () => {
   it('com o repositório vazio, escreve o que está no aparelho', async () => {
     const local = com(orc({ despesas: [d('a', 1)] }), { a: '2026-10-01T00:00:00Z' })
     let enviado: Orcamento | null = null
-    const buscar = ((_u: string, init?: RequestInit) => {
-      if (init?.method !== 'PUT') return Promise.resolve(new Response(null, { status: 404 }))
+    const buscar = ((u: string, init?: RequestInit) => {
+      // 404 só no ficheiro: o repositório vê-se, senão era falta de acesso.
+      if (init?.method !== 'PUT')
+        return Promise.resolve(new Response(null, { status: u.endsWith('.json') ? 404 : 200 }))
       const corpo = JSON.parse(String(init.body)) as { content: string }
       enviado = JSON.parse(deBase64(corpo.content)) as Orcamento
       return Promise.resolve(new Response(JSON.stringify({ content: { sha: 'novo' } }), { status: 201 }))
@@ -252,11 +254,11 @@ describe('sincronizar', () => {
 
   it('aproveita para esquecer as lápides velhas', async () => {
     const local = com(orc(), {}, { velha: '2020-01-01T00:00:00Z' })
-    const buscar = ((_u: string, init?: RequestInit) =>
+    const buscar = ((u: string, init?: RequestInit) =>
       Promise.resolve(
         init?.method === 'PUT'
           ? new Response(JSON.stringify({ content: { sha: 'n' } }), { status: 200 })
-          : new Response(null, { status: 404 }),
+          : new Response(null, { status: u.endsWith('.json') ? 404 : 200 }),
       )) as unknown as typeof fetch
 
     const r = await sincronizar(local, cred, buscar, hoje)

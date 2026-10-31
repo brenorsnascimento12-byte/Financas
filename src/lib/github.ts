@@ -51,6 +51,9 @@ const cabecalhos = (token: string) => ({
 
 const url = (repo: string) => `${API}/repos/${repo}/contents/${FICHEIRO}`
 
+const SEM_ACESSO =
+  'Não foi possível chegar ao repositório. Confirma o nome (utilizador/repositório, com as maiúsculas certas) e que o token dá acesso de Conteúdo a esse repositório.'
+
 function validar(repo: string) {
   if (!REPO_VALIDO.test(repo)) {
     throw new ErroSync('repo', 'O repositório tem de ser no formato utilizador/repositório.')
@@ -75,6 +78,17 @@ function verificarAcesso(r: Response) {
   }
 }
 
+/**
+ * Num repositório privado que o token não consegue ver, a API responde 404 em
+ * vez de 403 — de propósito, para não revelar que ele existe. Isso faz com que
+ * "ainda não há ficheiro", "o nome está errado" e "o token não chega lá" cheguem
+ * todos iguais. Pergunta-se pelo repositório para os separar.
+ */
+async function repositorioVisivel(c: Credenciais, buscar: typeof fetch): Promise<boolean> {
+  const r = await pedir(`${API}/repos/${c.repo}`, { headers: cabecalhos(c.token) }, buscar)
+  return r.ok
+}
+
 export interface Remoto {
   orcamento: Orcamento | null
   /** Identifica a versão que está lá: é o que deteta escritas do outro aparelho. */
@@ -85,8 +99,11 @@ export async function lerRemoto(c: Credenciais, buscar: typeof fetch = fetch): P
   validar(c.repo)
   const r = await pedir(url(c.repo), { headers: cabecalhos(c.token) }, buscar)
 
-  // Ainda não há ficheiro: é o estado normal da primeira sincronização.
-  if (r.status === 404) return { orcamento: null, sha: null }
+  if (r.status === 404) {
+    // Ficheiro em falta num repositório que se vê é a primeira sincronização.
+    if (await repositorioVisivel(c, buscar)) return { orcamento: null, sha: null }
+    throw new ErroSync('acesso', SEM_ACESSO)
+  }
   verificarAcesso(r)
   if (!r.ok) {
     throw new ErroSync('rede', `O GitHub respondeu ${r.status}. Tenta outra vez daqui a pouco.`)
@@ -139,6 +156,7 @@ export async function escreverRemoto(
   )
 
   verificarAcesso(r)
+  if (r.status === 404) throw new ErroSync('acesso', SEM_ACESSO)
   if (r.status === 409 || r.status === 422) {
     throw new ErroSync('conflito', 'O outro aparelho escreveu entretanto. A juntar as duas versões.')
   }
