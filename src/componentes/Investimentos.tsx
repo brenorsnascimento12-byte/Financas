@@ -172,10 +172,23 @@ function PainelRegras({ orcamento }: { orcamento: Orcamento }) {
 
 function IndicadorPesos({ orcamento }: { orcamento: Orcamento }) {
   const pesos = useMemo(() => pesosCarteira(orcamento), [orcamento])
-  const sugestoes = useMemo(() => sugerirAportes(orcamento, pesos), [orcamento, pesos])
+  const somaBases = orcamento.investimentos.etfs.reduce((s, e) => s + e.aporteBase, 0)
+
+  // `null` significa "o que está nas definições": o campo acompanha-as em vez de
+  // ficar preso ao valor que lá estava quando o ecrã abriu.
+  const [montante, setMontante] = useState<string | null>(null)
+  // Campo vazio é "ainda não disse", não "zero": a meio de apagar para escrever
+  // outro número, a lista toda ia a zeros. Um zero escrito de propósito conta.
+  const pedido =
+    montante === null || montante.trim() === '' ? NaN : Number(montante.replace(',', '.'))
+  const alterado = Number.isFinite(pedido) && pedido !== somaBases
+
+  const sugestoes = useMemo(
+    () => sugerirAportes(orcamento, pesos, alterado ? pedido : undefined),
+    [orcamento, pesos, alterado, pedido],
+  )
   const foraDoIntervalo =
     pesos?.bandaEmergentes === 'abaixo' || pesos?.bandaEmergentes === 'acima'
-  const totalAportes = sugestoes.reduce((t, x) => t + x.valor, 0)
 
   // Sem fotografia mostram-se os alvos definidos e um traço no lugar do valor:
   // diz-se o que falta sem fingir que a carteira está no sítio.
@@ -214,8 +227,27 @@ function IndicadorPesos({ orcamento }: { orcamento: Orcamento }) {
       <div className="bloco-aportes">
         <div className="seccao-topo">
           <p className="etiqueta-bloco">Aportes deste mês</p>
-          <span className="seccao-total">total {eurExato(totalAportes)}</span>
+          {/* Editável aqui, e não só nas definições: o que muda de mês para mês
+              é quanto há para investir, não a repartição que se decidiu. */}
+          <span className="campo-entrada campo-montante">
+            <input
+              type="text"
+              inputMode="decimal"
+              aria-label="Quanto investir este mês"
+              value={montante ?? String(somaBases)}
+              onChange={(e) => setMontante(e.target.value)}
+            />
+            <span className="sufixo">€</span>
+          </span>
         </div>
+        {alterado && (
+          <p className="rodape rodape--montante">
+            Em vez dos {eur(somaBases)} de todos os meses ·{' '}
+            <button type="button" className="botao botao--discreto" onClick={() => setMontante(null)}>
+              Repor
+            </button>
+          </p>
+        )}
         <ul className="lista-aportes">
           {sugestoes.map((s) => (
             <li key={s.etf.id}>

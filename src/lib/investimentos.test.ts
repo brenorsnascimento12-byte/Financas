@@ -240,3 +240,69 @@ describe('sugerirAportes', () => {
     expect(Object.values(s).every((x) => x.valor >= 0)).toBe(true)
   })
 })
+
+describe('sugerirAportes com um montante diferente do configurado', () => {
+  const sugerir = (montante?: number, carteira?: Record<string, number>, etfs = ETFS) => {
+    const o = orcamento(carteira ? [saldo(carteira)] : [], etfs)
+    return Object.fromEntries(
+      sugerirAportes(o, pesosCarteira(o), montante).map((s) => [s.etf.id, s]),
+    )
+  }
+
+  it('sem montante indicado, mantém os aportes base configurados', () => {
+    const s = sugerir()
+    expect(s.iwda.valor).toBe(110)
+    expect(s.eimi.valor).toBe(50)
+  })
+
+  it('reparte um montante maior na mesma proporção dos aportes base', () => {
+    // 250 € em vez de 200 €: tudo multiplicado por 1,25.
+    const s = sugerir(250)
+    expect(s.iwda.valor).toBeCloseTo(137.5)
+    expect(s.eimi.valor).toBeCloseTo(62.5)
+    expect(s.defense.valor).toBeCloseTo(25)
+    expect(s.digital.valor).toBeCloseTo(25)
+  })
+
+  it('reparte um montante menor', () => {
+    const s = sugerir(100)
+    expect(s.iwda.valor).toBeCloseTo(55)
+    expect(s.eimi.valor).toBeCloseTo(25)
+  })
+
+  it('o total sugerido é sempre o montante pedido', () => {
+    for (const m of [0, 37.5, 100, 250, 1000]) {
+      const total = Object.values(sugerir(m)).reduce((t, x) => t + x.valor, 0)
+      expect(total).toBeCloseTo(m)
+    }
+  })
+
+  it('sem dinheiro não sugere nada', () => {
+    expect(Object.values(sugerir(0)).every((x) => x.valor === 0)).toBe(true)
+  })
+
+  it('as regras continuam a mandar sobre o montante novo', () => {
+    // Temáticos acima do teto: os 12,5% deles vão para o núcleo, com 250 € tal
+    // como iam com 200 €.
+    const s = sugerir(250, { iwda: 1556, eimi: 244, defense: 150, digital: 150 })
+    expect(s.defense.valor).toBe(0)
+    expect(s.digital.valor).toBe(0)
+    expect(s.iwda.valor + s.eimi.valor).toBeCloseTo(250)
+  })
+
+  it('o "em vez de" compara com a parte do montante pedido, não com o configurado', () => {
+    const s = sugerir(250, { iwda: 1556, eimi: 244, defense: 150, digital: 150 })
+    expect(s.defense.base).toBeCloseTo(25)
+  })
+
+  it('sem aportes base configurados, reparte pelos pesos-alvo', () => {
+    const semBase = ETFS.map((e) => ({ ...e, aporteBase: 0 }))
+    const s = sugerir(100, undefined, semBase)
+    expect(s.iwda.valor).toBeCloseTo(79)
+    expect(s.eimi.valor).toBeCloseTo(11)
+  })
+
+  it('um montante negativo não gera aportes negativos', () => {
+    expect(Object.values(sugerir(-50)).every((x) => x.valor >= 0)).toBe(true)
+  })
+})

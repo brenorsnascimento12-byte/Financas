@@ -110,9 +110,37 @@ const pct = (f: number) => `${(f * 100).toFixed(1).replace('.', ',')}%`
  * vai tudo para o lado em falta; quando chega e sobra, mandar mais do que o
  * necessário afastaria do alvo em vez de aproximar.
  */
-export function sugerirAportes(o: Orcamento, pesos: Pesos | null): SugestaoAporte[] {
+export function sugerirAportes(
+  o: Orcamento,
+  pesos: Pesos | null,
+  montanteTotal?: number,
+): SugestaoAporte[] {
   const { etfs, tetoTematicos } = o.investimentos
-  const valores = new Map(etfs.map((e) => [e.id, e.aporteBase]))
+  const somaBases = etfs.reduce((s, e) => s + e.aporteBase, 0)
+  const somaAlvos = etfs.reduce((s, e) => s + e.pesoAlvo, 0)
+  const total = Math.max(0, montanteTotal ?? somaBases)
+
+  /**
+   * A parte de cada ETF no montante deste mês.
+   *
+   * Dá-se pelos aportes base configurados, que é o que o utilizador decidiu
+   * quando tudo está no lugar; num mês em que haja mais ou menos dinheiro,
+   * escala tudo na mesma proporção. Sem aportes base, recai nos pesos-alvo —
+   * é o que resta para não repartir às cegas.
+   */
+  const quota = (e: Etf) =>
+    somaBases > 0
+      ? e.aporteBase / somaBases
+      : somaAlvos > 0
+        ? e.pesoAlvo / somaAlvos
+        : 1 / Math.max(1, etfs.length)
+
+  // Sem montante indicado passa-se o configurado tal e qual: escalá-lo por
+  // si próprio dava 110,00000000000003 em vez de 110.
+  const quotaDe = new Map(
+    etfs.map((e) => [e.id, montanteTotal === undefined ? e.aporteBase : total * quota(e)]),
+  )
+  const valores = new Map(quotaDe)
   const razoes = new Map<string, string>()
 
   const doPapel = (papeis: Etf['papel'][]) => etfs.filter((e) => papeis.includes(e.papel))
@@ -121,20 +149,21 @@ export function sugerirAportes(o: Orcamento, pesos: Pesos | null): SugestaoAport
   const emergentes = doPapel(['emergentes'])
   const tematicos = doPapel(['tematico'])
 
-  let poolNucleo = nucleoEtfs.reduce((s, e) => s + e.aporteBase, 0)
+  const parte = (e: Etf) => quotaDe.get(e.id) ?? 0
+  let poolNucleo = nucleoEtfs.reduce((s, e) => s + parte(e), 0)
 
   if (pesos?.acimaDoTeto) {
     for (const e of tematicos) {
       valores.set(e.id, 0)
       razoes.set(e.id, `temáticos em ${pct(pesos.tematicos)}, acima do teto de ${tetoTematicos}%`)
     }
-    poolNucleo += tematicos.reduce((s, e) => s + e.aporteBase, 0)
+    poolNucleo += tematicos.reduce((s, e) => s + parte(e), 0)
   }
 
   const repartir = (lista: Etf[], montante: number) => {
-    const soma = lista.reduce((s, e) => s + e.aporteBase, 0)
+    const soma = lista.reduce((s, e) => s + parte(e), 0)
     for (const e of lista) {
-      valores.set(e.id, soma > 0 ? (montante * e.aporteBase) / soma : montante / lista.length)
+      valores.set(e.id, soma > 0 ? (montante * parte(e)) / soma : montante / lista.length)
     }
   }
 
@@ -168,7 +197,7 @@ export function sugerirAportes(o: Orcamento, pesos: Pesos | null): SugestaoAport
 
   return etfs.map((etf) => ({
     etf,
-    base: etf.aporteBase,
+    base: quotaDe.get(etf.id) ?? 0,
     valor: valores.get(etf.id) ?? 0,
     razao: razoes.get(etf.id),
   }))

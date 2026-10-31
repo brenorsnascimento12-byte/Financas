@@ -1813,3 +1813,23 @@ thead th {
   color: var(--success-text);
   font-weight: 600;
 }
+
+/* Montante do mês, editável no próprio cartão dos aportes. */
+.campo-montante {
+  max-width: 116px;
+}
+
+.campo-montante input {
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.rodape--montante {
+  margin-top: 6px;
+}
+
+.rodape--montante .botao {
+  padding: 1px 8px;
+  min-height: 0;
+}
