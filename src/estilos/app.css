@@ -1664,3 +1664,26 @@ thead th {
     margin: 0;
   }
 }
+
+/* ---------- Estado da sincronização ---------- */
+
+/* Discreto de propósito: falhar a sincronizar é adiar, não perder. */
+.estado-sync {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 22ch;
+}
+
+.estado-sync--erro {
+  color: var(--text-secondary);
+}
+
+@media (max-width: 560px) {
+  .estado-sync {
+    max-width: 14ch;
+  }
+}

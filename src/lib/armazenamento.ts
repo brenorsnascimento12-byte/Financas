@@ -1,4 +1,4 @@
-import type { Aporte, Indicador, Investimentos, Orcamento, Saldo } from '../types'
+import type { Aporte, Indicador, Investimentos, Orcamento, Saldo, Sincronizacao } from '../types'
 import { mesAtual } from './orcamento'
 
 const CHAVE = 'financas:estado:v2'
@@ -15,6 +15,10 @@ export interface Estado {
 }
 
 /**
+ * Os ids são fixos, e não gerados: dois aparelhos que instalem a app de novo têm
+ * de criar exatamente as mesmas categorias de arranque, senão a sincronização
+ * junta as duas listas e fica tudo a dobrar.
+ *
  * Categorias e valores de arranque a partir da realidade medida: transporte
  * Braga–Sintra duas viagens por semana, alimentação suplementar, barbeiro e
  * telemóvel dão ~276 €/mês de essenciais.
@@ -23,15 +27,15 @@ export interface Estado {
  * classificar como essencial tudo aquilo de que não nos queremos privar.
  */
 const categoriasIniciais = () => [
-  { id: novoId(), nome: 'Transporte Braga ↔ Sintra', fatia: 'essencial' as const },
-  { id: novoId(), nome: 'Alimentação suplementar', fatia: 'essencial' as const },
-  { id: novoId(), nome: 'Barbeiro', fatia: 'essencial' as const },
-  { id: novoId(), nome: 'Telemóvel', fatia: 'essencial' as const },
-  { id: novoId(), nome: 'Restaurantes', fatia: 'naoEssencial' as const },
-  { id: novoId(), nome: 'Viagens e saídas', fatia: 'naoEssencial' as const },
-  { id: novoId(), nome: 'Compras', fatia: 'naoEssencial' as const },
-  { id: novoId(), nome: 'Claude', fatia: 'naoEssencial' as const },
-  { id: novoId(), nome: 'Google One', fatia: 'naoEssencial' as const },
+  { id: 'transporte', nome: 'Transporte Braga ↔ Sintra', fatia: 'essencial' as const },
+  { id: 'alimentacao', nome: 'Alimentação suplementar', fatia: 'essencial' as const },
+  { id: 'barbeiro', nome: 'Barbeiro', fatia: 'essencial' as const },
+  { id: 'telemovel', nome: 'Telemóvel', fatia: 'essencial' as const },
+  { id: 'restaurantes', nome: 'Restaurantes', fatia: 'naoEssencial' as const },
+  { id: 'saidas', nome: 'Viagens e saídas', fatia: 'naoEssencial' as const },
+  { id: 'compras', nome: 'Compras', fatia: 'naoEssencial' as const },
+  { id: 'claude', nome: 'Claude', fatia: 'naoEssencial' as const },
+  { id: 'google-one', nome: 'Google One', fatia: 'naoEssencial' as const },
 ]
 
 /**
@@ -55,6 +59,37 @@ const investimentosIniciais = (): Investimentos => ({
 
 const ORDEM_INDICADORES: Indicador[] = ['pesos', 'poupanca', 'casamento']
 
+/** As listas cujos registos a sincronização funde um a um. */
+const LISTAS = [
+  'categorias',
+  'despesas',
+  'objetivos',
+  'aportes',
+  'saldos',
+  'compromissos',
+  'revisoes',
+  'regras',
+] as const
+
+/**
+ * Marcas de partida para os dados que já existiam antes da sincronização.
+ *
+ * A data é fixa, e não a de agora, de propósito: os dois aparelhos têm de gerar
+ * exatamente as mesmas marcas para os mesmos registos, senão o que migrasse mais
+ * tarde ganhava a fusão inteira sem ter mexido em nada. O índice dentro de cada
+ * lista preserva a ordem atual, que é por onde a fusão depois ordena.
+ */
+function marcasIniciais(o: Orcamento): Sincronizacao {
+  const alteradoEm: Record<string, string> = {}
+  for (const lista of LISTAS) {
+    const registos = (o[lista] ?? []) as { id: string }[]
+    registos.forEach((r, i) => {
+      alteradoEm[r.id] = new Date(i * 1000).toISOString()
+    })
+  }
+  return { alteradoEm, apagados: {} }
+}
+
 export const orcamentoInicial = (): Orcamento => ({
   rendimentoMensal: 600,
   vencimentosPorAno: 14,
@@ -65,25 +100,25 @@ export const orcamentoInicial = (): Orcamento => ({
   alvoNaoEssencial: 16,
   categorias: categoriasIniciais(),
   despesas: [],
-  objetivos: [{ id: novoId(), nome: 'Casamento', valorAlvo: 6500, dataAlvo: '2029-01' }],
+  objetivos: [{ id: 'casamento', nome: 'Casamento', valorAlvo: 6500, dataAlvo: '2029-01' }],
   aportes: [],
   saldos: [],
-  compromissos: [{ id: novoId(), nome: 'Voo para o Brasil', valor: 1000 }],
+  compromissos: [{ id: 'voo-brasil', nome: 'Voo para o Brasil', valor: 1000 }],
   revisoes: [
     {
-      id: novoId(),
+      id: 'rev-aspirante',
       data: '2027-01',
       titulo: 'Mudança de escalão — Aspirante',
       nota: 'Líquido sobe para ~1800 €/mês e os essenciais mantêm-se em ~276 €: caem para ~15% do rendimento. Recalcular os rácios — a poupança pode subir para 60-70% sem sacrifício. (6.º ano, Alferes: ~2200 €/mês.)',
     },
     {
-      id: novoId(),
+      id: 'rev-tirocinio',
       data: '2027-01',
       titulo: 'Reunião do tirocínio no Brasil',
       nota: 'Decisão do comando. Se avançar, reabrir a alocação com o capital novo.',
     },
     {
-      id: novoId(),
+      id: 'rev-casamento',
       data: '2028-06',
       titulo: 'Casamento e decisão de casa',
       nota: 'Reavaliar o alvo e o destino do dinheiro à medida que a data se aproxima.',
@@ -94,6 +129,7 @@ export const orcamentoInicial = (): Orcamento => ({
   linhasIgnoradas: [],
   investimentos: investimentosIniciais(),
   ordemIndicadores: [...ORDEM_INDICADORES],
+  sincronizacao: { alteradoEm: {}, apagados: {} },
   ultimaRevisao: mesAtual(),
   rendimentoNaRevisao: 600,
 })
@@ -128,6 +164,11 @@ export function migrar(guardado: Partial<Orcamento> | undefined): Orcamento {
     orcamento.ordemIndicadores.length !== ORDEM_INDICADORES.length
   ) {
     orcamento.ordemIndicadores = [...ORDEM_INDICADORES]
+  }
+  // Olha-se ao que estava guardado, não ao resultado: os valores de arranque já
+  // trazem a tabela de marcas vazia, e com ela os dados antigos nunca a ganhavam.
+  if (!guardado?.sincronizacao?.alteradoEm) {
+    orcamento.sincronizacao = { ...orcamento.sincronizacao, ...marcasIniciais(orcamento) }
   }
   // Fotografias antigas não tinham certificados; a reserva em reais foi removida.
   orcamento.saldos = orcamento.saldos.map((s) => {
@@ -214,4 +255,30 @@ export function exportar(estado: Estado): void {
   a.download = `financas-${new Date().toISOString().slice(0, 10)}.json`
   a.click()
   URL.revokeObjectURL(url)
+}
+
+/**
+ * O token vive à parte do estado, de propósito.
+ *
+ * Se estivesse dentro do orçamento, ia parar à exportação em JSON e, pior, ao
+ * próprio ficheiro que se envia para o repositório — uma credencial a viajar
+ * com os dados que ela protege.
+ */
+const CHAVE_TOKEN = 'financas:token-github'
+
+export function lerToken(): string {
+  try {
+    return localStorage.getItem(CHAVE_TOKEN) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+export function guardarToken(token: string): void {
+  try {
+    if (token === '') localStorage.removeItem(CHAVE_TOKEN)
+    else localStorage.setItem(CHAVE_TOKEN, token)
+  } catch {
+    // Modo privado: a sincronização fica por esta sessão.
+  }
 }

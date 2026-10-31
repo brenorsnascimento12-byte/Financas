@@ -53,3 +53,38 @@ describe('migrar', () => {
     expect(o.ordemIndicadores).toEqual(['pesos', 'poupanca', 'casamento'])
   })
 })
+
+describe('marcas de sincronização na migração', () => {
+  const guardado = {
+    despesas: [
+      { id: 'd1', data: '2026-09-01', valor: 10, categoriaId: 'c' },
+      { id: 'd2', data: '2026-09-02', valor: 20, categoriaId: 'c' },
+    ],
+  } as unknown as Partial<Orcamento>
+
+  it('dá marca de partida aos registos que já existiam', () => {
+    // Sem marcas, a fusão não sabe ordenar nem decidir nada sobre eles.
+    const o = migrar(guardado)
+    expect(o.sincronizacao.alteradoEm.d1).toBeDefined()
+    expect(o.sincronizacao.alteradoEm.d2).toBeDefined()
+  })
+
+  it('as marcas de partida preservam a ordem atual', () => {
+    const o = migrar(guardado)
+    expect(o.sincronizacao.alteradoEm.d1 < o.sincronizacao.alteradoEm.d2).toBe(true)
+  })
+
+  it('são iguais nos dois aparelhos, para nenhum ganhar só por ter migrado depois', () => {
+    expect(migrar(guardado).sincronizacao.alteradoEm).toEqual(
+      migrar(guardado).sincronizacao.alteradoEm,
+    )
+  })
+
+  it('não mexe nas marcas de quem já sincroniza', () => {
+    const comMarcas = {
+      ...guardado,
+      sincronizacao: { alteradoEm: { d1: '2026-10-10T00:00:00Z' }, apagados: {} },
+    } as unknown as Partial<Orcamento>
+    expect(migrar(comMarcas).sincronizacao.alteradoEm).toEqual({ d1: '2026-10-10T00:00:00Z' })
+  })
+})

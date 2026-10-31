@@ -111,6 +111,32 @@ export interface Investimentos {
 /** Os indicadores da secção Investimentos. A ordem é escolhida pelo utilizador. */
 export type Indicador = 'pesos' | 'poupanca' | 'casamento'
 
+/**
+ * O que permite juntar as alterações de dois aparelhos sem perder nenhuma.
+ *
+ * Não vive nos próprios registos: é uma tabela à parte, indexada pelo id, para
+ * os tipos de dados não ganharem um campo técnico cada um.
+ */
+export interface Sincronizacao {
+  /** id de registo, ou nome de campo solto, → quando mudou (ISO). */
+  alteradoEm: Record<string, string>
+  /**
+   * Registos apagados e quando. Sem isto, apagar no telemóvel não chegava:
+   * o PC ainda tinha o registo e devolvia-o na sincronização seguinte.
+   */
+  apagados: Record<string, string>
+  /** "utilizador/repositório" privado onde fica a cópia. */
+  repo?: string
+  /** Quando correu bem pela última vez. */
+  ultimaSync?: string
+  /**
+   * Última alteração feita **neste** aparelho. Distingue-se das marcas em
+   * `alteradoEm`, que também trazem o que veio do outro: sem esta separação, a
+   * app dizia "por sincronizar" logo a seguir a ter sincronizado.
+   */
+  alteradoLocalmenteEm?: string
+}
+
 /** Parte da liquidez que já tem dono e não deve contar como disponível. */
 export interface Compromisso {
   id: string
@@ -189,6 +215,7 @@ export interface Orcamento {
   investimentos: Investimentos
   /** Ordem dos indicadores da secção Investimentos, de cima para baixo. */
   ordemIndicadores: Indicador[]
+  sincronizacao: Sincronizacao
   /**
    * Impressões digitais de linhas concretas mandadas ignorar. Distingue-se de
    * uma `Regra` com tipo 'ignorar': a regra silencia todos os movimentos com

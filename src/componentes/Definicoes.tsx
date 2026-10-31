@@ -4,14 +4,31 @@ import { alvoPoupanca, mesAtual, precisaRevisao } from '../lib/orcamento'
 import { novoId, lerFicheiro } from '../lib/armazenamento'
 import { eur } from '../lib/formato'
 import { Campo } from './Campo'
+import { Sincronizacao, type EstadoSync } from './Sincronizacao'
 
 interface Props {
   orcamento: Orcamento
   aoMudar: (patch: Partial<Orcamento>) => void
   aoExportar: () => void
+  token: string
+  estadoSync: EstadoSync
+  porSincronizar: boolean
+  aoMudarToken: (token: string) => void
+  aoSincronizar: () => void
+  aoTrazer: () => void
 }
 
-export function Definicoes({ orcamento, aoMudar, aoExportar }: Props) {
+export function Definicoes({
+  orcamento,
+  aoMudar,
+  aoExportar,
+  token,
+  estadoSync,
+  porSincronizar,
+  aoMudarToken,
+  aoSincronizar,
+  aoTrazer,
+}: Props) {
   const [novaCategoria, setNovaCategoria] = useState('')
   const [novoObjetivo, setNovoObjetivo] = useState('')
   const [novoCompromisso, setNovoCompromisso] = useState('')
@@ -151,6 +168,19 @@ export function Definicoes({ orcamento, aoMudar, aoExportar }: Props) {
           </p>
         )}
       </section>
+
+      <Sincronizacao
+        orcamento={orcamento}
+        token={token}
+        estado={estadoSync}
+        porSincronizar={porSincronizar}
+        aoMudarRepo={(repo) =>
+          aoMudar({ sincronizacao: { ...orcamento.sincronizacao, repo } })
+        }
+        aoMudarToken={aoMudarToken}
+        aoSincronizar={aoSincronizar}
+        aoTrazer={aoTrazer}
+      />
 
       <details className="dobravel">
         <summary>Carteira, categorias, objetivos e marcos</summary>
