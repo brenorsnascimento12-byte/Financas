@@ -22,10 +22,11 @@
   --warning: #fab219;
   --critical: #d03b3b;
 
-  /* Aviso calmo: fundo quente esbatido e texto escuro legível, em vez de
-     vermelho. O que está acima do teto é um facto a corrigir, não um alarme. */
-  --aviso-fundo: #fdf1d6;
-  --aviso-texto: #6b4a00;
+  /* Fundos esbatidos dos estados, do design. Aviso calmo em vez de vermelho:
+     o que está acima do teto é um facto a corrigir, não um alarme. */
+  --good-wash: rgba(12, 163, 12, 0.09);
+  --warning-wash: rgba(250, 178, 25, 0.12);
+  --warning-text: #7a5200;
 
   --raio: 10px;
   --sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -53,8 +54,9 @@
     --serie-3: #199e70;
 
     --success-text: #0ca30c;
-    --aviso-fundo: #3a2e12;
-    --aviso-texto: #f6d38a;
+    --good-wash: rgba(12, 163, 12, 0.14);
+    --warning-wash: rgba(250, 178, 25, 0.16);
+    --warning-text: #fab219;
   }
 }
 
@@ -76,6 +78,7 @@
   --serie-3: #199e70;
 
   --success-text: #0ca30c;
-  --aviso-fundo: #3a2e12;
-  --aviso-texto: #f6d38a;
+  --good-wash: rgba(12, 163, 12, 0.14);
+  --warning-wash: rgba(250, 178, 25, 0.16);
+  --warning-text: #fab219;
 }

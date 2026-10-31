@@ -16,9 +16,16 @@ interface Props {
 }
 
 const TITULO: Record<Indicador, string> = {
-  pesos: 'Carteira',
+  pesos: 'Pesos vs. alvo',
   poupanca: 'Taxa de poupança',
   casamento: 'Casamento',
+}
+
+/** Debaixo do título: de onde vem o número, para não se ler ao contrário. */
+const SUBTITULO: Record<Indicador, string> = {
+  pesos: 'Os 4 ETFs, na última fotografia',
+  poupanca: 'Aportes ÷ rendimento do mês',
+  casamento: 'Certificados e liquidez livre',
 }
 
 /** Doze meses é a janela da média: um ano inteiro inclui os meses atípicos. */
@@ -68,23 +75,92 @@ function BarraPeso({ nome, valor, peso, alvo }: PropsBarra) {
   )
 }
 
-function Regra({ ok, texto }: { ok: boolean; texto: string }) {
+function Regra({
+  ok,
+  nome,
+  medida,
+  accao,
+}: {
+  ok: boolean
+  nome: string
+  medida: string
+  accao?: string
+}) {
   return (
     <li className={ok ? 'regra regra--ok' : 'regra regra--aviso'}>
       <span className="regra-marca" aria-hidden="true">
         {ok ? '✓' : '!'}
       </span>
-      <span>{texto}</span>
+      <span>
+        <span className="regra-nome">{nome}</span>
+        <span className="regra-medida">{medida}</span>
+        {!ok && accao && <span className="regra-accao">{accao}</span>}
+      </span>
     </li>
+  )
+}
+
+/**
+ * As regras vivem acima dos indicadores, e não dentro do cartão da carteira.
+ *
+ * São a pergunta que se faz primeiro — "está tudo dentro das regras?" — e a
+ * resposta não pode andar a mudar de sítio sempre que os cartões se reordenam.
+ */
+function PainelRegras({ orcamento }: { orcamento: Orcamento }) {
+  const pesos = useMemo(() => pesosCarteira(orcamento), [orcamento])
+  const { tetoTematicos, emergentesMin, emergentesMax, etfs } = orcamento.investimentos
+  if (!pesos) return null
+
+  const temBanda = pesos.emergentesNucleo !== null
+  const total = 1 + (temBanda ? 1 : 0)
+  const falhadas = (pesos.acimaDoTeto ? 1 : 0) + (temBanda && pesos.bandaEmergentes !== 'dentro' ? 1 : 0)
+  const nomesEmergentes = etfs.filter((e) => e.papel === 'emergentes').map((e) => e.nome)
+  const nomesGlobais = etfs.filter((e) => e.papel === 'global').map((e) => e.nome)
+  const reforcar = (pesos.bandaEmergentes === 'abaixo' ? nomesEmergentes : nomesGlobais).join(' e ')
+
+  const titulo =
+    falhadas === 0
+      ? 'Tudo dentro das regras'
+      : `${falhadas} regra${falhadas > 1 ? 's' : ''} pede${falhadas > 1 ? 'm' : ''} atenção`
+  // Com todas fora, o título já o disse: repetir era ruído.
+  const sub =
+    falhadas === 0
+      ? `${total} regras cumpridas.`
+      : falhadas < total
+        ? 'A outra está dentro dos limites.'
+        : null
+
+  return (
+    <section className={`cartao painel-regras${falhadas > 0 ? ' painel-regras--aviso' : ''}`}>
+      <p className="regras-veredito">{titulo}</p>
+      {sub && <p className="regras-sub">{sub}</p>}
+
+      <ul className="regras">
+        <Regra
+          ok={!pesos.acimaDoTeto}
+          nome="Temáticos"
+          medida={`${pct(pesos.tematicos)} da carteira · teto ${tetoTematicos}%`}
+          accao="Acima do teto — redireciona os aportes para o núcleo."
+        />
+        {temBanda && (
+          <Regra
+            ok={pesos.bandaEmergentes === 'dentro'}
+            nome="Emergentes no núcleo"
+            medida={`${pct(pesos.emergentesNucleo ?? 0)} do núcleo · intervalo ${emergentesMin}–${emergentesMax}%`}
+            accao={`${pesos.bandaEmergentes === 'abaixo' ? 'Abaixo' : 'Acima'} do intervalo — reforça o ${reforcar} nos próximos aportes.`}
+          />
+        )}
+      </ul>
+    </section>
   )
 }
 
 function IndicadorPesos({ orcamento }: { orcamento: Orcamento }) {
   const pesos = useMemo(() => pesosCarteira(orcamento), [orcamento])
   const sugestoes = useMemo(() => sugerirAportes(orcamento, pesos), [orcamento, pesos])
-  const { tetoTematicos, emergentesMin, emergentesMax } = orcamento.investimentos
   const foraDoIntervalo =
     pesos?.bandaEmergentes === 'abaixo' || pesos?.bandaEmergentes === 'acima'
+  const totalAportes = sugestoes.reduce((t, x) => t + x.valor, 0)
 
   if (!pesos) {
     return (
@@ -97,20 +173,6 @@ function IndicadorPesos({ orcamento }: { orcamento: Orcamento }) {
 
   return (
     <>
-      {/* Primeiro a pergunta que interessa: está tudo dentro das regras? */}
-      <ul className="regras">
-        <Regra
-          ok={!pesos.acimaDoTeto}
-          texto={`Temáticos em ${pct(pesos.tematicos)} — teto de ${tetoTematicos}%`}
-        />
-        {pesos.emergentesNucleo !== null && (
-          <Regra
-            ok={pesos.bandaEmergentes === 'dentro'}
-            texto={`Emergentes em ${pct(pesos.emergentesNucleo)} do núcleo — intervalo ${emergentesMin}–${emergentesMax}%`}
-          />
-        )}
-      </ul>
-
       <p className="numero-secundario">{eur(pesos.totalEtf)}</p>
       <p className="sub-secundario">em ETFs, somando as duas carteiras</p>
 
@@ -121,7 +183,10 @@ function IndicadorPesos({ orcamento }: { orcamento: Orcamento }) {
       </div>
 
       <div className="bloco-aportes">
-        <p className="etiqueta-bloco">Aportes deste mês</p>
+        <div className="seccao-topo">
+          <p className="etiqueta-bloco">Aportes deste mês</p>
+          <span className="seccao-total">total {eurExato(totalAportes)}</span>
+        </div>
         <ul className="lista-aportes">
           {sugestoes.map((s) => (
             <li key={s.etf.id}>
@@ -135,23 +200,13 @@ function IndicadorPesos({ orcamento }: { orcamento: Orcamento }) {
             </li>
           ))}
         </ul>
-        {/* Cada regra explica-se por si: juntá-las numa frase só dizia "o lado em
-            falta" mesmo quando era só o teto a disparar, e aí não há lado em falta. */}
-        {pesos.acimaDoTeto && (
+        {/* O painel lá em cima já diz que regra falhou e o que fazer. Aqui fica
+            só o que ele não diz: quanto, e que isto nunca passa por vender. */}
+        {(pesos.acimaDoTeto || foraDoIntervalo) && (
           <p className="rodape">
-            Os temáticos estão acima do teto, por isso o que lhes ia vai para o núcleo.
-            Não se vende o que está acima: corrige-se com o dinheiro novo.
+            Vai para o lado em falta exatamente o que o põe no alvo — e se um mês não
+            chegar, vai tudo. Nunca se vende para corrigir.
           </p>
-        )}
-        {foraDoIntervalo && (
-          <p className="rodape">
-            Os emergentes estão {pesos.bandaEmergentes === 'abaixo' ? 'abaixo' : 'acima'} do
-            intervalo. Do dinheiro que vai para o núcleo, recebem exatamente o que os põe no
-            peso-alvo depois do aporte — se um mês não chegar, recebem tudo.
-          </p>
-        )}
-        {!pesos.acimaDoTeto && !foraDoIntervalo && (
-          <p className="rodape">Tudo dentro das regras: mantêm-se os aportes base.</p>
         )}
       </div>
     </>
@@ -237,11 +292,17 @@ export function Investimentos({ orcamento, resumos, aoMudar }: Props) {
   }
 
   return (
-    <div className="grelha-indicadores">
-      {ordem.map((id, i) => (
+    <>
+      <PainelRegras orcamento={orcamento} />
+
+      <div className="grelha-indicadores">
+        {ordem.map((id, i) => (
         <section className="cartao" key={id}>
           <div className="seccao-topo">
-            <h2>{TITULO[id]}</h2>
+            <div>
+              <h2>{TITULO[id]}</h2>
+              <p className="sub-titulo-cartao">{SUBTITULO[id]}</p>
+            </div>
             <span className="ordenar">
               <button
                 type="button"
@@ -268,7 +329,8 @@ export function Investimentos({ orcamento, resumos, aoMudar }: Props) {
           {id === 'poupanca' && <IndicadorPoupanca resumos={resumos} />}
           {id === 'casamento' && <IndicadorCasamento orcamento={orcamento} />}
         </section>
-      ))}
-    </div>
+        ))}
+      </div>
+    </>
   )
 }

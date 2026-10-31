@@ -1489,13 +1489,13 @@ thead th {
 
 .regra--ok .regra-marca {
   color: var(--success-text);
-  background: color-mix(in srgb, var(--good) 16%, var(--surface-1));
+  background: var(--good-wash);
 }
 
 /* Aviso em tom suave e com texto claro: não é um alarme de mercado. */
 .regra--aviso .regra-marca {
-  color: var(--aviso-texto);
-  background: var(--aviso-fundo);
+  color: var(--warning-text);
+  background: var(--warning-wash);
 }
 
 .regra--aviso {
@@ -1639,7 +1639,7 @@ thead th {
   margin: 10px 0 0;
   font-size: 13px;
   color: var(--text-primary);
-  background: var(--aviso-fundo);
+  background: var(--warning-wash);
   border-radius: var(--raio);
   padding: 10px 12px;
 }
@@ -1686,4 +1686,64 @@ thead th {
   .estado-sync {
     max-width: 14ch;
   }
+}
+
+/* ---------- Painel das regras ---------- */
+
+/* Fica acima dos indicadores e fora da grelha: é a pergunta que se faz
+   primeiro, e a resposta não pode mudar de sítio quando se reordenam. */
+.painel-regras--aviso {
+  background: var(--warning-wash);
+}
+
+.regras-veredito {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.regras-sub {
+  margin: 2px 0 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.regra-nome,
+.regra-medida,
+.regra-accao {
+  display: block;
+}
+
+.regra-nome {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.regra-medida {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.regra-accao {
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--warning-text);
+}
+
+.regras {
+  margin-bottom: 0;
+  gap: 13px;
+}
+
+.sub-titulo-cartao {
+  margin: 1px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.seccao-topo > div > h2 {
+  margin: 0;
 }
