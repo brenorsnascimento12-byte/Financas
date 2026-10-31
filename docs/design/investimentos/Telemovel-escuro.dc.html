@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<title>Investimentos · telemóvel escuro</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+h1,h2,h3,p{margin:0}
+.t{--surface-1:#fcfcfb;--plane:#f9f9f7;--text-primary:#0b0b0b;--text-secondary:#52514e;--text-muted:#898781;--gridline:#e1e0d9;--baseline:#c3c2b7;--border:rgba(11,11,11,.1);--wash:rgba(11,11,11,.04);--serie-1:#2a78d6;--serie-2:#eb6834;--serie-3:#1baf7a;--good:#0ca30c;--success-text:#006300;--warning:#fab219;--critical:#d03b3b;--raio:10px;--sans:system-ui,-apple-system,'Segoe UI',sans-serif;--warning-text:#7a5200;--warning-wash:rgba(250,178,25,.16);--good-wash:rgba(12,163,12,.09);--sombra-elevada:0 10px 28px rgba(11,11,11,.14);--scrim:rgba(11,11,11,.32);font-family:var(--sans);color:var(--text-primary);background:var(--surface-1);font-variant-numeric:tabular-nums}
+.t.escuro{--surface-1:#1a1a19;--plane:#0d0d0d;--text-primary:#fff;--text-secondary:#c3c2b7;--text-muted:#898781;--gridline:#2c2c2a;--baseline:#383835;--border:rgba(255,255,255,.1);--wash:rgba(255,255,255,.05);--serie-1:#3987e5;--serie-2:#d95926;--serie-3:#199e70;--success-text:#0ca30c;--warning-text:#fab219;--warning-wash:rgba(250,178,25,.12);--good-wash:rgba(12,163,12,.14);--sombra-elevada:0 10px 28px rgba(0,0,0,.55);--scrim:rgba(0,0,0,.6)}
+.card{background:var(--plane);border:1px solid var(--border);border-radius:var(--raio)}
+.lbl{font-size:13px;line-height:18px;color:var(--text-secondary)}
+.trk{position:relative;height:8px;background:var(--gridline);border-radius:4px}
+.fil{position:absolute;left:0;top:0;bottom:0;background:var(--serie-1);border-radius:4px}
+.alv{position:absolute;top:-4px;width:2px;height:16px;margin-left:-1px;background:var(--text-primary);border-radius:1px}
+.rng{position:relative;height:6px;background:var(--gridline);border-radius:3px}
+.band{position:absolute;top:0;bottom:0;background:var(--baseline);border-radius:3px}
+.pt{position:absolute;top:-4px;width:10px;height:10px;margin-left:-7px;border-radius:50%;background:var(--text-primary);border:2px solid var(--plane)}
+.pt.w{background:var(--warning)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;font-size:12px;font-weight:600;white-space:nowrap}
+.ok{color:var(--success-text);background:var(--good-wash)}
+.av{color:var(--warning-text);background:var(--warning-wash)}
+.pill{display:inline-flex;align-items:center;gap:8px;min-height:32px;padding:0 12px;border-radius:16px;font:13px var(--sans);color:var(--text-secondary);background:var(--wash);border:0;cursor:pointer}
+.pill.av{color:var(--warning-text);background:var(--warning-wash);font-weight:500}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;box-sizing:border-box}
+.grip{width:44px;height:44px;flex:none;border:0;background:transparent;color:var(--text-muted);border-radius:8px;display:grid;place-items:center;cursor:grab;padding:0}
+.grip:hover{background:var(--wash);color:var(--text-secondary)}
+.btn{min-height:44px;padding:0 18px;border-radius:var(--raio);border:0;background:var(--text-primary);color:var(--surface-1);font:600 15px var(--sans);cursor:pointer;white-space:nowrap}
+.btn2{min-height:44px;padding:0 16px;border-radius:var(--raio);border:1px solid var(--border);background:transparent;color:var(--text-primary);font:500 15px var(--sans);cursor:pointer}
+</style>
+</helmet>
+<div class="{{tema}}" style="width: 390px; height: 1480px; box-sizing: border-box; padding: 20px 16px 32px; display: flex; flex-direction: column; gap: 16px">
+  <header style="display: flex; flex-direction: column; gap: 8px">
+    <h1 style="font-size: 28px; line-height: 34px; font-weight: 650; letter-spacing: -0.01em">Investimentos</h1>
+    <div><button class="pill" type="button"><span class="dot" style="border: 2px solid var(--serie-1)"></span>Por sincronizar · 1 alteração</button></div>
+  </header>
+
+  <section class="card" aria-labelledby="regras2" style="padding: 20px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; gap: 12px; align-items: flex-start">
+      <span class="ok" style="width: 36px; height: 36px; border-radius: 18px; display: grid; place-items: center; flex: none">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5l3.2 3.2L14 5.8"></path></svg>
+      </span>
+      <div>
+        <h2 id="regras2" style="font-size: 20px; line-height: 26px; font-weight: 600">Tudo dentro das regras</h2>
+        <p class="lbl">2 de 2 regras · fotografia de 30 out.</p>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+        <span style="font-size: 15px; font-weight: 500">Temáticos</span>
+        <span class="chip ok">Dentro</span>
+      </div>
+      <div class="rng" aria-hidden="true"><div class="band" style="left: 0%; width: 50%"></div><div class="pt" style="left: 40%"></div></div>
+      <p class="lbl">8% da carteira · teto 10%</p>
+    </div>
+    <div style="height: 1px; background: var(--gridline)"></div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+        <span style="font-size: 15px; font-weight: 500">Emergentes no núcleo</span>
+        <span class="chip ok">Dentro</span>
+      </div>
+      <div class="rng" aria-hidden="true"><div class="band" style="left: 45%; width: 30%"></div><div class="pt" style="left: 49%"></div></div>
+      <p class="lbl">9,8% do núcleo · intervalo 9–15%</p>
+    </div>
+  </section>
+
+  <section class="card" style="padding: 12px 10px 20px 20px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 2px">
+      <div style="flex: 1; min-width: 0">
+        <h2 style="font-size: 17px; line-height: 22px; font-weight: 600">Casamento</h2>
+        <p class="lbl">Certificados de Aforro</p>
+      </div>
+      <button class="grip" type="button" aria-label="Reordenar Casamento"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.4"></circle><circle cx="11" cy="3" r="1.4"></circle><circle cx="5" cy="8" r="1.4"></circle><circle cx="11" cy="8" r="1.4"></circle><circle cx="5" cy="13" r="1.4"></circle><circle cx="11" cy="13" r="1.4"></circle></svg></button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px; padding-right: 10px">
+      <p style="white-space: nowrap"><span style="font-size: 32px; line-height: 38px; font-weight: 600; letter-spacing: -0.02em">2 263 €</span><span style="font-size: 15px; color: var(--text-secondary)"> de 6 500 €</span></p>
+      <div class="trk" style="height: 10px; border-radius: 5px"><div class="fil" style="width: 35%; background: var(--serie-3); border-radius: 5px"></div></div>
+      <div class="lbl" style="display: flex; justify-content: space-between"><span>35% reunido</span><span>faltam 4 237 €</span></div>
+      <p style="font-size: 15px; line-height: 21px">163 €/mês até janeiro de 2029</p>
+    </div>
+  </section>
+
+  <section class="card" style="padding: 12px 10px 20px 20px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 2px">
+      <div style="flex: 1; min-width: 0">
+        <h2 style="font-size: 17px; line-height: 22px; font-weight: 600">Pesos vs. alvo</h2>
+        <p class="lbl">4 ETFs · fotografia de 30 out.</p>
+      </div>
+      <button class="grip" type="button" aria-label="Reordenar Pesos vs. alvo"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.4"></circle><circle cx="11" cy="3" r="1.4"></circle><circle cx="5" cy="8" r="1.4"></circle><circle cx="11" cy="8" r="1.4"></circle><circle cx="5" cy="13" r="1.4"></circle><circle cx="11" cy="13" r="1.4"></circle></svg></button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 18px; padding-right: 10px">
+      <div class="lbl" style="display: flex; gap: 16px">
+        <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 14px; height: 8px; border-radius: 2px; background: var(--serie-1)"></span>atual</span>
+        <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 2px; height: 14px; border-radius: 1px; background: var(--text-primary)"></span>alvo</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px"><span style="font-size: 15px; font-weight: 500">IWDA</span><span style="font-size: 15px; white-space: nowrap"><b style="font-weight: 600">83%</b><span style="color: var(--text-secondary)"> · alvo 79%</span></span></div>
+        <div class="trk"><div class="fil" style="width: 83%"></div><div class="alv" style="left: 79%"></div></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px"><span style="font-size: 15px; font-weight: 500">EIMI</span><span style="font-size: 15px; white-space: nowrap"><b style="font-weight: 600">9%</b><span style="color: var(--text-secondary)"> · alvo 11%</span></span></div>
+        <div class="trk"><div class="fil" style="width: 9%"></div><div class="alv" style="left: 11%"></div></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px"><span style="font-size: 15px; font-weight: 500">VanEck Defense</span><span style="font-size: 15px; white-space: nowrap"><b style="font-weight: 600">4%</b><span style="color: var(--text-secondary)"> · alvo 5%</span></span></div>
+        <div class="trk"><div class="fil" style="width: 4%"></div><div class="alv" style="left: 5%"></div></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px"><span style="font-size: 15px; font-weight: 500">iShares Digital Security</span><span style="font-size: 15px; white-space: nowrap"><b style="font-weight: 600">4%</b><span style="color: var(--text-secondary)"> · alvo 5%</span></span></div>
+        <div class="trk"><div class="fil" style="width: 4%"></div><div class="alv" style="left: 5%"></div></div>
+      </div>
+      <div style="height: 1px; background: var(--gridline)"></div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline"><h3 style="font-size: 15px; font-weight: 600">Aportes deste mês</h3><span class="lbl">total 200 €</span></div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+          <div style="background: var(--wash); border-radius: 8px; padding: 10px 12px"><p class="lbl">IWDA</p><p style="font-size: 18px; line-height: 24px; font-weight: 600">110 €</p></div>
+          <div style="background: var(--wash); border-radius: 8px; padding: 10px 12px"><p class="lbl">EIMI</p><p style="font-size: 18px; line-height: 24px; font-weight: 600">50 €</p></div>
+          <div style="background: var(--wash); border-radius: 8px; padding: 10px 12px"><p class="lbl">VanEck Defense</p><p style="font-size: 18px; line-height: 24px; font-weight: 600">20 €</p></div>
+          <div style="background: var(--wash); border-radius: 8px; padding: 10px 12px"><p class="lbl">Digital Security</p><p style="font-size: 18px; line-height: 24px; font-weight: 600">20 €</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" style="padding: 12px 10px 20px 20px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 2px">
+      <div style="flex: 1; min-width: 0">
+        <h2 style="font-size: 17px; line-height: 22px; font-weight: 600">Taxa de poupança</h2>
+        <p class="lbl">Aportes ÷ rendimento do mês</p>
+      </div>
+      <button class="grip" type="button" aria-label="Reordenar Taxa de poupança"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.4"></circle><circle cx="11" cy="3" r="1.4"></circle><circle cx="5" cy="8" r="1.4"></circle><circle cx="11" cy="8" r="1.4"></circle><circle cx="5" cy="13" r="1.4"></circle><circle cx="11" cy="13" r="1.4"></circle></svg></button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 14px; padding-right: 10px">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px">
+        <div><p style="font-size: 40px; line-height: 44px; font-weight: 600; letter-spacing: -0.02em">32%</p><p class="lbl">em outubro</p></div>
+        <div style="text-align: right"><p style="font-size: 20px; line-height: 26px; font-weight: 600">28%</p><p class="lbl">média de 12 meses</p></div>
+      </div>
+      <svg width="100%" height="64" viewBox="0 0 339 64" preserveAspectRatio="none" role="img" aria-label="Taxa de poupança dos últimos 12 meses, entre 22% e 33%, média 28%">
+        <g style="fill: var(--baseline)">
+          <rect x="0" y="26" width="20" height="38" rx="2"></rect><rect x="29" y="21" width="20" height="43" rx="2"></rect><rect x="58" y="29" width="20" height="35" rx="2"></rect><rect x="87" y="16" width="20" height="48" rx="2"></rect><rect x="116" y="18" width="20" height="46" rx="2"></rect><rect x="145" y="22" width="20" height="42" rx="2"></rect><rect x="174" y="14" width="20" height="50" rx="2"></rect><rect x="203" y="24" width="20" height="40" rx="2"></rect><rect x="232" y="19" width="20" height="45" rx="2"></rect><rect x="261" y="11" width="20" height="53" rx="2"></rect><rect x="290" y="18" width="20" height="46" rx="2"></rect>
+        </g>
+        <rect x="319" y="13" width="20" height="51" rx="2" style="fill: var(--serie-1)"></rect>
+        <line x1="0" y1="19" x2="339" y2="19" stroke-width="1" stroke-dasharray="3 3" vector-effect="non-scaling-stroke" style="stroke: var(--text-secondary)"></line>
+      </svg>
+      <div class="lbl" style="display: flex; justify-content: space-between"><span>nov. 2025</span><span>- - média</span><span>out. 2026</span></div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["claro","escuro"],"default":"escuro"},"$preview":{"width":390,"height":1480}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { tema: (this.props.tema ?? 'escuro') === 'escuro' ? 't escuro' : 't' };
+  }
+}
+</script>
+</body>
+</html>

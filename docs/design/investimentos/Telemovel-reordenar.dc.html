@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<title>Investimentos · a reordenar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+h1,h2,h3,p{margin:0}
+.t{--surface-1:#fcfcfb;--plane:#f9f9f7;--text-primary:#0b0b0b;--text-secondary:#52514e;--text-muted:#898781;--gridline:#e1e0d9;--baseline:#c3c2b7;--border:rgba(11,11,11,.1);--wash:rgba(11,11,11,.04);--serie-1:#2a78d6;--serie-2:#eb6834;--serie-3:#1baf7a;--good:#0ca30c;--success-text:#006300;--warning:#fab219;--critical:#d03b3b;--raio:10px;--sans:system-ui,-apple-system,'Segoe UI',sans-serif;--warning-text:#7a5200;--warning-wash:rgba(250,178,25,.16);--good-wash:rgba(12,163,12,.09);--sombra-elevada:0 10px 28px rgba(11,11,11,.14);--scrim:rgba(11,11,11,.32);font-family:var(--sans);color:var(--text-primary);background:var(--surface-1);font-variant-numeric:tabular-nums}
+.t.escuro{--surface-1:#1a1a19;--plane:#0d0d0d;--text-primary:#fff;--text-secondary:#c3c2b7;--text-muted:#898781;--gridline:#2c2c2a;--baseline:#383835;--border:rgba(255,255,255,.1);--wash:rgba(255,255,255,.05);--serie-1:#3987e5;--serie-2:#d95926;--serie-3:#199e70;--success-text:#0ca30c;--warning-text:#fab219;--warning-wash:rgba(250,178,25,.12);--good-wash:rgba(12,163,12,.14);--sombra-elevada:0 10px 28px rgba(0,0,0,.55);--scrim:rgba(0,0,0,.6)}
+.card{background:var(--plane);border:1px solid var(--border);border-radius:var(--raio)}
+.lbl{font-size:13px;line-height:18px;color:var(--text-secondary)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;font-size:12px;font-weight:600;white-space:nowrap}
+.av{color:var(--warning-text);background:var(--warning-wash)}
+.pill{display:inline-flex;align-items:center;gap:8px;min-height:32px;padding:0 12px;border-radius:16px;font:13px var(--sans);color:var(--text-secondary);background:var(--wash);border:0;cursor:pointer}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;box-sizing:border-box}
+.grip{width:44px;height:44px;flex:none;border:0;background:transparent;color:var(--text-muted);border-radius:8px;display:grid;place-items:center;cursor:grab;padding:0}
+.row{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 18px;min-height:56px;box-sizing:border-box}
+.btn2{min-height:44px;padding:0 16px;border-radius:var(--raio);border:1px solid var(--border);background:transparent;color:var(--text-primary);font:500 15px var(--sans);cursor:pointer}
+</style>
+</helmet>
+<div class="{{tema}}" style="width: 390px; height: 844px; box-sizing: border-box; padding: 20px 16px 32px; display: flex; flex-direction: column; gap: 16px; position: relative">
+  <header style="display: flex; flex-direction: column; gap: 8px">
+    <h1 style="font-size: 28px; line-height: 34px; font-weight: 650; letter-spacing: -0.01em">Investimentos</h1>
+    <div><button class="pill" type="button"><span class="dot" style="background: var(--good)"></span>Sincronizado há 2 min</button></div>
+  </header>
+
+  <section class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 12px; opacity: 0.45" aria-hidden="true">
+    <span class="av" style="width: 32px; height: 32px; border-radius: 16px; display: grid; place-items: center; flex: none">
+      <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="9" r="7"></circle><path d="M9 5.5v4.2M9 12.4v.1"></path></svg>
+    </span>
+    <p style="font-size: 17px; font-weight: 600">1 regra pede atenção</p>
+  </section>
+
+  <p class="lbl" aria-live="polite" style="padding: 0 4px">A mover <b style="color: var(--text-primary)">Casamento</b> · posição 1 de 3. Larga para guardar.</p>
+
+  <div style="position: relative; display: flex; flex-direction: column; gap: 10px">
+    <div style="height: 56px; border: 2px dashed var(--serie-1); border-radius: var(--raio); background: var(--wash)"></div>
+
+    <div class="card row">
+      <div style="flex: 1; min-width: 0"><p style="font-size: 16px; font-weight: 600">Pesos vs. alvo</p><p class="lbl">IWDA 85% · alvo 79%</p></div>
+      <span class="chip av">1 aviso</span>
+      <span class="grip" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.4"></circle><circle cx="11" cy="3" r="1.4"></circle><circle cx="5" cy="8" r="1.4"></circle><circle cx="11" cy="8" r="1.4"></circle><circle cx="5" cy="13" r="1.4"></circle><circle cx="11" cy="13" r="1.4"></circle></svg></span>
+    </div>
+
+    <div class="card row">
+      <div style="flex: 1; min-width: 0"><p style="font-size: 16px; font-weight: 600">Taxa de poupança</p><p class="lbl">32% · média 28%</p></div>
+      <span class="grip" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.4"></circle><circle cx="11" cy="3" r="1.4"></circle><circle cx="5" cy="8" r="1.4"></circle><circle cx="11" cy="8" r="1.4"></circle><circle cx="5" cy="13" r="1.4"></circle><circle cx="11" cy="13" r="1.4"></circle></svg></span>
+    </div>
+
+    <div class="card row" style="position: absolute; left: 6px; right: -6px; top: -10px; box-shadow: var(--sombra-elevada); background: var(--surface-1); border-color: var(--serie-1)">
+      <div style="flex: 1; min-width: 0"><p style="font-size: 16px; font-weight: 600">Casamento</p><p class="lbl">2 100 € de 6 500 €</p></div>
+      <span class="grip" aria-hidden="true" style="color: var(--serie-1); cursor: grabbing"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.4"></circle><circle cx="11" cy="3" r="1.4"></circle><circle cx="5" cy="8" r="1.4"></circle><circle cx="11" cy="8" r="1.4"></circle><circle cx="5" cy="13" r="1.4"></circle><circle cx="11" cy="13" r="1.4"></circle></svg></span>
+    </div>
+  </div>
+
+  <p class="lbl" style="padding: 0 4px">Enquanto arrastas, os cartões encolhem para uma linha: cabem todos no ecrã e não é preciso rolar.</p>
+
+  <div class="card" style="position: absolute; left: 16px; right: 16px; bottom: 24px; padding: 6px 6px 6px 16px; display: flex; align-items: center; gap: 12px; background: var(--text-primary); color: var(--surface-1); border: 0">
+    <p style="flex: 1; font-size: 14px">Depois de largar: «Ordem guardada»</p>
+    <button class="btn2" type="button" style="color: var(--surface-1); border-color: transparent; font-weight: 600">Desfazer</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["claro","escuro"],"default":"claro"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { tema: (this.props.tema ?? 'claro') === 'escuro' ? 't escuro' : 't' };
+  }
+}
+</script>
+</body>
+</html>

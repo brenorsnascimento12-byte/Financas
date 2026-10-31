@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<title>Investimentos · telemóvel</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+h1,h2,h3,p{margin:0}
+.t{--surface-1:#fcfcfb;--plane:#f9f9f7;--text-primary:#0b0b0b;--text-secondary:#52514e;--text-muted:#898781;--gridline:#e1e0d9;--baseline:#c3c2b7;--border:rgba(11,11,11,.1);--wash:rgba(11,11,11,.04);--serie-1:#2a78d6;--serie-2:#eb6834;--serie-3:#1baf7a;--good:#0ca30c;--success-text:#006300;--warning:#fab219;--critical:#d03b3b;--raio:10px;--sans:system-ui,-apple-system,'Segoe UI',sans-serif;--warning-text:#7a5200;--warning-wash:rgba(250,178,25,.16);--good-wash:rgba(12,163,12,.09);--sombra-elevada:0 10px 28px rgba(11,11,11,.14);--scrim:rgba(11,11,11,.32);font-family:var(--sans);color:var(--text-primary);background:var(--surface-1);font-variant-numeric:tabular-nums}
+.t.escuro{--surface-1:#1a1a19;--plane:#0d0d0d;--text-primary:#fff;--text-secondary:#c3c2b7;--text-muted:#898781;--gridline:#2c2c2a;--baseline:#383835;--border:rgba(255,255,255,.1);--wash:rgba(255,255,255,.05);--serie-1:#3987e5;--serie-2:#d95926;--serie-3:#199e70;--success-text:#0ca30c;--warning-text:#fab219;--warning-wash:rgba(250,178,25,.12);--good-wash:rgba(12,163,12,.14);--sombra-elevada:0 10px 28px rgba(0,0,0,.55);--scrim:rgba(0,0,0,.6)}
+.card{background:var(--plane);border:1px solid var(--border);border-radius:var(--raio)}
+.lbl{font-size:13px;line-height:18px;color:var(--text-secondary)}
+.trk{position:relative;height:8px;background:var(--gridline);border-radius:4px}
+.fil{position:absolute;left:0;top:0;bottom:0;background:var(--serie-1);border-radius:4px}
+.alv{position:absolute;top:-4px;width:2px;height:16px;margin-left:-1px;background:var(--text-primary);border-radius:1px}
+.rng{position:relative;height:6px;background:var(--gridline);border-radius:3px}
+.band{position:absolute;top:0;bottom:0;background:var(--baseline);border-radius:3px}
+.pt{position:absolute;top:-4px;width:10px;height:10px;margin-left:-7px;border-radius:50%;background:var(--text-primary);border:2px solid var(--plane)}
+.pt.w{background:var(--warning)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;font-size:12px;font-weight:600;white-space:nowrap}
+.ok{color:var(--success-text);background:var(--good-wash)}
+.av{color:var(--warning-text);background:var(--warning-wash)}
+.pill{display:inline-flex;align-items:center;gap:8px;min-height:32px;padding:0 12px;border-radius:16px;font:13px var(--sans);color:var(--text-secondary);background:var(--wash);border:0;cursor:pointer}
+.pill.av{color:var(--warning-text);background:var(--warning-wash);font-weight:500}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;box-sizing:border-box}
+.grip{width:44px;height:44px;flex:none;border:0;background:transparent;color:var(--text-muted);border-radius:8px;display:grid;place-items:center;cursor:grab;padding:0}
+.grip:hover{background:var(--wash);color:var(--text-secondary)}
+.grip:disabled{opacity:.3;cursor:default}
+.grip[aria-expanded="true"]{color:var(--serie-1);background:var(--wash)}
+.btn{min-height:44px;padding:0 18px;border-radius:var(--raio);border:0;background:var(--text-primary);color:var(--surface-1);font:600 15px var(--sans);cursor:pointer;white-space:nowrap}
+.btn2{min-height:44px;padding:0 16px;border-radius:var(--raio);border:1px solid var(--border);background:transparent;color:var(--text-primary);font:500 15px var(--sans);cursor:pointer}
+</style>
+</helmet>
+<div class="{{tema}}" style="width: 390px; height: 1480px; box-sizing: border-box; padding: 20px 16px 32px; display: flex; flex-direction: column; gap: 16px">
+  <header style="display: flex; flex-direction: column; gap: 8px">
+    <h1 style="font-size: 28px; line-height: 34px; font-weight: 650; letter-spacing: -0.01em">Investimentos</h1>
+    <div><button class="pill" type="button"><span class="dot" style="background: var(--good)"></span>Sincronizado há 2 min</button></div>
+  </header>
+
+  <div class="card" style="padding: 14px 14px 14px 16px; display: flex; align-items: center; gap: 12px">
+    <span style="width: 36px; height: 36px; border-radius: 18px; background: var(--wash); color: var(--text-secondary); display: grid; place-items: center; flex: none">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.5a1.5 1.5 0 0 1 1.5-1.5h1.8l1.2-2h4l1.2 2H14a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5H4a1.5 1.5 0 0 1-1.5-1.5z"></path><circle cx="9" cy="10" r="2.6"></circle></svg>
+    </span>
+    <div style="flex: 1; min-width: 0">
+      <p style="font-size: 15px; line-height: 20px; font-weight: 600">Falta a fotografia de outubro</p>
+      <p class="lbl">4 ETFs e Certificados · 1 minuto</p>
+    </div>
+    <button class="btn" type="button" style="padding: 0 14px">Registar</button>
+  </div>
+
+  <section class="card" aria-labelledby="regras" style="padding: 20px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; gap: 12px; align-items: flex-start">
+      <span class="av" style="width: 36px; height: 36px; border-radius: 18px; display: grid; place-items: center; flex: none">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="7"></circle><path d="M9 5.5v4.2M9 12.4v.1"></path></svg>
+      </span>
+      <div>
+        <h2 id="regras" style="font-size: 20px; line-height: 26px; font-weight: 600">1 regra pede atenção</h2>
+        <p class="lbl">A outra está dentro · fotografia de 30 set.</p>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+        <span style="font-size: 15px; font-weight: 500">Temáticos</span>
+        <span class="chip ok">Dentro</span>
+      </div>
+      <div class="rng" aria-hidden="true"><div class="band" style="left: 0%; width: 50%"></div><div class="pt" style="left: 40%"></div></div>
+      <p class="lbl">8% da carteira · teto 10%</p>
+    </div>
+    <div style="height: 1px; background: var(--gridline)"></div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+        <span style="font-size: 15px; font-weight: 500">Emergentes no núcleo</span>
+        <span class="chip av">Abaixo</span>
+      </div>
+      <div class="rng" aria-hidden="true"><div class="band" style="left: 45%; width: 30%"></div><div class="pt w" style="left: 38%"></div></div>
+      <p class="lbl">7,6% do núcleo · intervalo 9–15%</p>
+      <p style="font-size: 15px; line-height: 21px">Abaixo do intervalo — reforça o EIMI nos próximos aportes.</p>
+    </div>
+  </section>
+
+  <sc-for list="{{cards}}" as="c" hint-placeholder-count="3">
+    <section class="card" style="padding: 12px 10px 20px 20px; display: flex; flex-direction: column; gap: 14px; {{c.ring}}">
+      <div style="display: flex; align-items: center; gap: 2px">
+        <div style="flex: 1; min-width: 0">
+          <h2 style="font-size: 17px; line-height: 22px; font-weight: 600">{{c.title}}</h2>
+          <p class="lbl">{{c.sub}}</p>
+        </div>
+        <sc-if value="{{c.open}}" hint-placeholder-val="{{false}}">
+          <button class="grip" type="button" aria-label="Mover para cima" disabled="{{c.noUp}}" onClick="{{c.up}}"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14V4M4.5 8.5L9 4l4.5 4.5"></path></svg></button>
+          <button class="grip" type="button" aria-label="Mover para baixo" disabled="{{c.noDown}}" onClick="{{c.down}}"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v10M4.5 9.5L9 14l4.5-4.5"></path></svg></button>
+        </sc-if>
+        <button class="grip" type="button" aria-label="Reordenar {{c.title}}" aria-expanded="{{c.open}}" onClick="{{c.toggle}}"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.4"></circle><circle cx="11" cy="3" r="1.4"></circle><circle cx="5" cy="8" r="1.4"></circle><circle cx="11" cy="8" r="1.4"></circle><circle cx="5" cy="13" r="1.4"></circle><circle cx="11" cy="13" r="1.4"></circle></svg></button>
+      </div>
+      <sc-if value="{{c.open}}" hint-placeholder-val="{{false}}">
+        <p class="lbl" style="margin-top: -6px; padding-right: 10px">Usa as setas, ou mantém premido o cartão e arrasta. A ordem fica guardada.</p>
+      </sc-if>
+
+      <sc-if value="{{c.isPesos}}" hint-placeholder-val="{{true}}">
+        <div style="display: flex; flex-direction: column; gap: 18px; padding-right: 10px">
+          <div class="lbl" style="display: flex; gap: 16px">
+            <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 14px; height: 8px; border-radius: 2px; background: var(--serie-1)"></span>atual</span>
+            <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 2px; height: 14px; border-radius: 1px; background: var(--text-primary)"></span>alvo</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px"><span style="font-size: 15px; font-weight: 500">IWDA</span><span style="font-size: 15px; white-space: nowrap"><b style="font-weight: 600">85%</b><span style="color: var(--text-secondary)"> · alvo 79%</span></span></div>
+            <div class="trk"><div class="fil" style="width: 85%"></div><div class="alv" style="left: 79%"></div></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px"><span style="font-size: 15px; font-weight: 500">EIMI</span><span style="font-size: 15px; white-space: nowrap"><b style="font-weight: 600">7%</b><span style="color: var(--text-secondary)"> · alvo 11%</span></span></div>
+            <div class="trk"><div class="fil" style="width: 7%"></div><div class="alv" style="left: 11%"></div></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px"><span style="font-size: 15px; font-weight: 500">VanEck Defense</span><span style="font-size: 15px; white-space: nowrap"><b style="font-weight: 600">4%</b><span style="color: var(--text-secondary)"> · alvo 5%</span></span></div>
+            <div class="trk"><div class="fil" style="width: 4%"></div><div class="alv" style="left: 5%"></div></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px"><span style="font-size: 15px; font-weight: 500">iShares Digital Security</span><span style="font-size: 15px; white-space: nowrap"><b style="font-weight: 600">4%</b><span style="color: var(--text-secondary)"> · alvo 5%</span></span></div>
+            <div class="trk"><div class="fil" style="width: 4%"></div><div class="alv" style="left: 5%"></div></div>
+          </div>
+          <div style="height: 1px; background: var(--gridline)"></div>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <div style="display: flex; justify-content: space-between; align-items: baseline"><h3 style="font-size: 15px; font-weight: 600">Aportes deste mês</h3><span class="lbl">total 200 €</span></div>
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+              <div style="background: var(--wash); border-radius: 8px; padding: 10px 12px"><p class="lbl">IWDA</p><p style="font-size: 18px; line-height: 24px; font-weight: 600">110 €</p></div>
+              <div style="background: var(--wash); border-radius: 8px; padding: 10px 12px"><p class="lbl">EIMI</p><p style="font-size: 18px; line-height: 24px; font-weight: 600">50 €</p></div>
+              <div style="background: var(--wash); border-radius: 8px; padding: 10px 12px"><p class="lbl">VanEck Defense</p><p style="font-size: 18px; line-height: 24px; font-weight: 600">20 €</p></div>
+              <div style="background: var(--wash); border-radius: 8px; padding: 10px 12px"><p class="lbl">Digital Security</p><p style="font-size: 18px; line-height: 24px; font-weight: 600">20 €</p></div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{c.isPoup}}" hint-placeholder-val="{{false}}">
+        <div style="display: flex; flex-direction: column; gap: 14px; padding-right: 10px">
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px">
+            <div><p style="font-size: 40px; line-height: 44px; font-weight: 600; letter-spacing: -0.02em">32%</p><p class="lbl">em outubro</p></div>
+            <div style="text-align: right"><p style="font-size: 20px; line-height: 26px; font-weight: 600">28%</p><p class="lbl">média de 12 meses</p></div>
+          </div>
+          <svg width="100%" height="64" viewBox="0 0 339 64" preserveAspectRatio="none" role="img" aria-label="Taxa de poupança dos últimos 12 meses, entre 22% e 33%, média 28%">
+            <g style="fill: var(--baseline)">
+              <rect x="0" y="26" width="20" height="38" rx="2"></rect><rect x="29" y="21" width="20" height="43" rx="2"></rect><rect x="58" y="29" width="20" height="35" rx="2"></rect><rect x="87" y="16" width="20" height="48" rx="2"></rect><rect x="116" y="18" width="20" height="46" rx="2"></rect><rect x="145" y="22" width="20" height="42" rx="2"></rect><rect x="174" y="14" width="20" height="50" rx="2"></rect><rect x="203" y="24" width="20" height="40" rx="2"></rect><rect x="232" y="19" width="20" height="45" rx="2"></rect><rect x="261" y="11" width="20" height="53" rx="2"></rect><rect x="290" y="18" width="20" height="46" rx="2"></rect>
+            </g>
+            <rect x="319" y="13" width="20" height="51" rx="2" style="fill: var(--serie-1)"></rect>
+            <line x1="0" y1="19" x2="339" y2="19" stroke-width="1" stroke-dasharray="3 3" vector-effect="non-scaling-stroke" style="stroke: var(--text-secondary)"></line>
+          </svg>
+          <div class="lbl" style="display: flex; justify-content: space-between"><span>nov. 2025</span><span>- - média</span><span>out. 2026</span></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{c.isCas}}" hint-placeholder-val="{{false}}">
+        <div style="display: flex; flex-direction: column; gap: 12px; padding-right: 10px">
+          <p style="white-space: nowrap"><span style="font-size: 32px; line-height: 38px; font-weight: 600; letter-spacing: -0.02em">2 100 €</span><span style="font-size: 15px; color: var(--text-secondary)"> de 6 500 €</span></p>
+          <div class="trk" style="height: 10px; border-radius: 5px"><div class="fil" style="width: 32%; background: var(--serie-3); border-radius: 5px"></div></div>
+          <div class="lbl" style="display: flex; justify-content: space-between"><span>32% reunido</span><span>faltam 4 400 €</span></div>
+          <p style="font-size: 15px; line-height: 21px">163 €/mês até janeiro de 2029</p>
+        </div>
+      </sc-if>
+    </section>
+  </sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["claro","escuro"],"default":"claro"},"$preview":{"width":390,"height":1480}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { order: ['pesos', 'poup', 'cas'], mv: null }; }
+  renderVals() {
+    const order = (this.state && this.state.order) || ['pesos', 'poup', 'cas'];
+    const mv = this.state ? this.state.mv : null;
+    const T = { pesos: 'Pesos vs. alvo', poup: 'Taxa de poupança', cas: 'Casamento' };
+    const S = { pesos: '4 ETFs · fotografia de 30 set.', poup: 'Aportes ÷ rendimento do mês', cas: 'Certificados de Aforro' };
+    const move = (i, d) => {
+      const o = order.slice(); const j = i + d;
+      if (j < 0 || j >= o.length) return;
+      const x = o[i]; o[i] = o[j]; o[j] = x;
+      this.setState({ order: o });
+    };
+    return {
+      tema: (this.props.tema ?? 'claro') === 'escuro' ? 't escuro' : 't',
+      cards: order.map((id, i) => ({
+        id, title: T[id], sub: S[id],
+        isPesos: id === 'pesos', isPoup: id === 'poup', isCas: id === 'cas',
+        open: mv === id,
+        toggle: () => this.setState({ mv: mv === id ? null : id }),
+        up: () => move(i, -1), down: () => move(i, 1),
+        noUp: i === 0, noDown: i === order.length - 1,
+        ring: mv === id ? 'box-shadow: 0 0 0 2px var(--serie-1)' : ''
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

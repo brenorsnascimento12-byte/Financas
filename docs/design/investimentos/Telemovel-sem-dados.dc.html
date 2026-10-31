@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<title>Investimentos · sem dados</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+h1,h2,h3,p{margin:0}
+.t{--surface-1:#fcfcfb;--plane:#f9f9f7;--text-primary:#0b0b0b;--text-secondary:#52514e;--text-muted:#898781;--gridline:#e1e0d9;--baseline:#c3c2b7;--border:rgba(11,11,11,.1);--wash:rgba(11,11,11,.04);--serie-1:#2a78d6;--serie-2:#eb6834;--serie-3:#1baf7a;--good:#0ca30c;--success-text:#006300;--warning:#fab219;--critical:#d03b3b;--raio:10px;--sans:system-ui,-apple-system,'Segoe UI',sans-serif;--warning-text:#7a5200;--warning-wash:rgba(250,178,25,.16);--good-wash:rgba(12,163,12,.09);--sombra-elevada:0 10px 28px rgba(11,11,11,.14);--scrim:rgba(11,11,11,.32);font-family:var(--sans);color:var(--text-primary);background:var(--surface-1);font-variant-numeric:tabular-nums}
+.t.escuro{--surface-1:#1a1a19;--plane:#0d0d0d;--text-primary:#fff;--text-secondary:#c3c2b7;--text-muted:#898781;--gridline:#2c2c2a;--baseline:#383835;--border:rgba(255,255,255,.1);--wash:rgba(255,255,255,.05);--serie-1:#3987e5;--serie-2:#d95926;--serie-3:#199e70;--success-text:#0ca30c;--warning-text:#fab219;--warning-wash:rgba(250,178,25,.12);--good-wash:rgba(12,163,12,.14);--sombra-elevada:0 10px 28px rgba(0,0,0,.55);--scrim:rgba(0,0,0,.6)}
+.card{background:var(--plane);border:1px solid var(--border);border-radius:var(--raio)}
+.lbl{font-size:13px;line-height:18px;color:var(--text-secondary)}
+.trk{position:relative;height:8px;background:var(--gridline);border-radius:4px}
+.alv{position:absolute;top:-4px;width:2px;height:16px;margin-left:-1px;background:var(--text-primary);border-radius:1px}
+.pill{display:inline-flex;align-items:center;gap:8px;min-height:32px;padding:0 12px;border-radius:16px;font:13px var(--sans);color:var(--text-secondary);background:var(--wash);border:0;cursor:pointer}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;box-sizing:border-box}
+.grip{width:44px;height:44px;flex:none;border:0;background:transparent;color:var(--text-muted);border-radius:8px;display:grid;place-items:center;cursor:grab;padding:0}
+.btn{min-height:44px;padding:0 18px;border-radius:var(--raio);border:0;background:var(--text-primary);color:var(--surface-1);font:600 15px var(--sans);cursor:pointer;white-space:nowrap}
+.vazio{border:1px dashed var(--baseline);border-radius:8px}
+</style>
+</helmet>
+<div class="{{tema}}" style="width: 390px; height: 1480px; box-sizing: border-box; padding: 20px 16px 32px; display: flex; flex-direction: column; gap: 16px">
+  <header style="display: flex; flex-direction: column; gap: 8px">
+    <h1 style="font-size: 28px; line-height: 34px; font-weight: 650; letter-spacing: -0.01em">Investimentos</h1>
+    <div><button class="pill" type="button"><span class="dot" style="border: 1.5px solid var(--text-secondary)"></span>Sem rede — guardado no aparelho</button></div>
+  </header>
+
+  <section class="card" style="padding: 24px 20px; display: flex; flex-direction: column; gap: 14px">
+    <span style="width: 44px; height: 44px; border-radius: 22px; background: var(--wash); color: var(--text-secondary); display: grid; place-items: center">
+      <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.5a1.5 1.5 0 0 1 1.5-1.5h1.8l1.2-2h4l1.2 2H14a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5H4a1.5 1.5 0 0 1-1.5-1.5z"></path><circle cx="9" cy="10" r="2.6"></circle></svg>
+    </span>
+    <h2 style="font-size: 20px; line-height: 26px; font-weight: 600">Ainda sem fotografias</h2>
+    <p style="font-size: 15px; line-height: 22px; color: var(--text-secondary)">Uma vez por mês, regista o valor de cada ETF e o saldo dos Certificados. A partir daí vês os pesos, as regras e o caminho até ao objetivo.</p>
+    <div><button class="btn" type="button">Registar a primeira fotografia</button></div>
+  </section>
+
+  <section class="card" style="padding: 20px; display: flex; gap: 12px; align-items: flex-start">
+    <span style="width: 36px; height: 36px; border-radius: 18px; background: var(--wash); color: var(--text-secondary); display: grid; place-items: center; flex: none">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="7"></circle><path d="M6 9h6"></path></svg>
+    </span>
+    <div>
+      <h2 style="font-size: 17px; line-height: 22px; font-weight: 600">Regras por avaliar</h2>
+      <p class="lbl">Temáticos ≤ 10% · emergentes no núcleo 9–15%. Avaliadas na primeira fotografia.</p>
+    </div>
+  </section>
+
+  <section class="card" style="padding: 12px 10px 20px 20px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 2px">
+      <div style="flex: 1; min-width: 0">
+        <h2 style="font-size: 17px; line-height: 22px; font-weight: 600">Pesos vs. alvo</h2>
+        <p class="lbl">Alvos definidos · falta o valor atual</p>
+      </div>
+      <button class="grip" type="button" aria-label="Reordenar Pesos vs. alvo"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.4"></circle><circle cx="11" cy="3" r="1.4"></circle><circle cx="5" cy="8" r="1.4"></circle><circle cx="11" cy="8" r="1.4"></circle><circle cx="5" cy="13" r="1.4"></circle><circle cx="11" cy="13" r="1.4"></circle></svg></button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 18px; padding-right: 10px">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px"><span style="font-size: 15px; font-weight: 500">IWDA</span><span style="font-size: 15px; color: var(--text-secondary); white-space: nowrap">— · alvo 79%</span></div>
+        <div class="trk"><div class="alv" style="left: 79%"></div></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px"><span style="font-size: 15px; font-weight: 500">EIMI</span><span style="font-size: 15px; color: var(--text-secondary); white-space: nowrap">— · alvo 11%</span></div>
+        <div class="trk"><div class="alv" style="left: 11%"></div></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px"><span style="font-size: 15px; font-weight: 500">VanEck Defense</span><span style="font-size: 15px; color: var(--text-secondary); white-space: nowrap">— · alvo 5%</span></div>
+        <div class="trk"><div class="alv" style="left: 5%"></div></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px"><span style="font-size: 15px; font-weight: 500">iShares Digital Security</span><span style="font-size: 15px; color: var(--text-secondary); white-space: nowrap">— · alvo 5%</span></div>
+        <div class="trk"><div class="alv" style="left: 5%"></div></div>
+      </div>
+      <div style="height: 1px; background: var(--gridline)"></div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h3 style="font-size: 15px; font-weight: 600">Aportes deste mês</h3>
+        <p class="lbl">Calculados a partir da primeira fotografia, para aproximar os pesos do alvo.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" style="padding: 12px 10px 20px 20px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 2px">
+      <div style="flex: 1; min-width: 0">
+        <h2 style="font-size: 17px; line-height: 22px; font-weight: 600">Taxa de poupança</h2>
+        <p class="lbl">Aportes ÷ rendimento do mês</p>
+      </div>
+      <button class="grip" type="button" aria-label="Reordenar Taxa de poupança"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.4"></circle><circle cx="11" cy="3" r="1.4"></circle><circle cx="5" cy="8" r="1.4"></circle><circle cx="11" cy="8" r="1.4"></circle><circle cx="5" cy="13" r="1.4"></circle><circle cx="11" cy="13" r="1.4"></circle></svg></button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px; padding-right: 10px">
+      <p style="font-size: 40px; line-height: 44px; font-weight: 600; color: var(--text-secondary)">—</p>
+      <div style="display: flex; gap: 9px; align-items: flex-end; height: 64px" aria-hidden="true">
+        <div class="vazio" style="flex: 1; height: 24px"></div><div class="vazio" style="flex: 1; height: 24px"></div><div class="vazio" style="flex: 1; height: 24px"></div><div class="vazio" style="flex: 1; height: 24px"></div><div class="vazio" style="flex: 1; height: 24px"></div><div class="vazio" style="flex: 1; height: 24px"></div><div class="vazio" style="flex: 1; height: 24px"></div><div class="vazio" style="flex: 1; height: 24px"></div><div class="vazio" style="flex: 1; height: 24px"></div><div class="vazio" style="flex: 1; height: 24px"></div><div class="vazio" style="flex: 1; height: 24px"></div><div class="vazio" style="flex: 1; height: 24px"></div>
+      </div>
+      <p class="lbl">Aparece quando houver um mês fechado, com aportes e rendimento. A média pede 12 meses.</p>
+    </div>
+  </section>
+
+  <section class="card" style="padding: 12px 10px 20px 20px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 2px">
+      <div style="flex: 1; min-width: 0">
+        <h2 style="font-size: 17px; line-height: 22px; font-weight: 600">Casamento</h2>
+        <p class="lbl">Certificados de Aforro</p>
+      </div>
+      <button class="grip" type="button" aria-label="Reordenar Casamento"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.4"></circle><circle cx="11" cy="3" r="1.4"></circle><circle cx="5" cy="8" r="1.4"></circle><circle cx="11" cy="8" r="1.4"></circle><circle cx="5" cy="13" r="1.4"></circle><circle cx="11" cy="13" r="1.4"></circle></svg></button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px; padding-right: 10px">
+      <p style="white-space: nowrap"><span style="font-size: 32px; line-height: 38px; font-weight: 600; color: var(--text-secondary)">— €</span><span style="font-size: 15px; color: var(--text-secondary)"> de 6 500 €</span></p>
+      <div class="trk" style="height: 10px; border-radius: 5px"></div>
+      <p class="lbl">Falta o saldo dos Certificados. Com ele calculamos quanto pôr por mês até janeiro de 2029.</p>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["claro","escuro"],"default":"claro"},"$preview":{"width":390,"height":1480}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { tema: (this.props.tema ?? 'claro') === 'escuro' ? 't escuro' : 't' };
+  }
+}
+</script>
+</body>
+</html>

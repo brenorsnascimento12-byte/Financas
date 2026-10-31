@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<title>Fotografia de outubro · PC</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+h1,h2,h3,p{margin:0}
+.t{--surface-1:#fcfcfb;--plane:#f9f9f7;--text-primary:#0b0b0b;--text-secondary:#52514e;--text-muted:#898781;--gridline:#e1e0d9;--baseline:#c3c2b7;--border:rgba(11,11,11,.1);--wash:rgba(11,11,11,.04);--serie-1:#2a78d6;--serie-2:#eb6834;--serie-3:#1baf7a;--good:#0ca30c;--success-text:#006300;--warning:#fab219;--critical:#d03b3b;--raio:10px;--sans:system-ui,-apple-system,'Segoe UI',sans-serif;--warning-text:#7a5200;--warning-wash:rgba(250,178,25,.16);--good-wash:rgba(12,163,12,.09);--sombra-elevada:0 10px 28px rgba(11,11,11,.14);--scrim:rgba(11,11,11,.32);font-family:var(--sans);color:var(--text-primary);background:var(--surface-1);font-variant-numeric:tabular-nums}
+.t.escuro{--surface-1:#1a1a19;--plane:#0d0d0d;--text-primary:#fff;--text-secondary:#c3c2b7;--text-muted:#898781;--gridline:#2c2c2a;--baseline:#383835;--border:rgba(255,255,255,.1);--wash:rgba(255,255,255,.05);--serie-1:#3987e5;--serie-2:#d95926;--serie-3:#199e70;--success-text:#0ca30c;--warning-text:#fab219;--warning-wash:rgba(250,178,25,.12);--good-wash:rgba(12,163,12,.14);--sombra-elevada:0 10px 28px rgba(0,0,0,.55);--scrim:rgba(0,0,0,.6)}
+.card{background:var(--plane);border:1px solid var(--border);border-radius:var(--raio)}
+.lbl{font-size:13px;line-height:18px;color:var(--text-secondary)}
+.linha{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:center}
+.inp{position:relative}
+.inp input{width:100%;box-sizing:border-box;height:52px;padding:0 40px 0 14px;font:600 22px var(--sans);font-variant-numeric:tabular-nums;text-align:right;color:var(--text-primary);background:var(--plane);border:1px solid var(--border);border-radius:var(--raio);outline:none}
+.inp input:focus,.inp input.foco{border-color:var(--serie-1);box-shadow:0 0 0 1px var(--serie-1)}
+.inp span{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:17px;color:var(--text-secondary)}
+.btn{min-height:44px;padding:0 18px;border-radius:var(--raio);border:0;background:var(--text-primary);color:var(--surface-1);font:600 15px var(--sans);cursor:pointer}
+.btn2{min-height:44px;padding:0 16px;border-radius:var(--raio);border:1px solid var(--border);background:transparent;color:var(--text-primary);font:500 15px var(--sans);cursor:pointer}
+</style>
+</helmet>
+<div class="{{tema}}" style="position: relative; min-height: 960px; box-sizing: border-box">
+  <div aria-hidden="true" style="max-width: 1400px; margin: 0 auto; padding: 28px 32px; display: flex; flex-direction: column; gap: 20px">
+    <h1 style="font-size: 30px; line-height: 36px; font-weight: 650">Investimentos</h1>
+    <div class="card" style="height: 120px"></div>
+    <div style="display: flex; gap: 20px"><div class="card" style="flex: 1; height: 520px"></div><div class="card" style="flex: 1; height: 360px"></div><div class="card" style="flex: 1; height: 260px"></div></div>
+  </div>
+  <div style="position: absolute; inset: 0; background: var(--scrim); display: flex; justify-content: center; align-items: flex-start; padding: 72px 16px; box-sizing: border-box">
+    <section role="dialog" aria-modal="true" aria-labelledby="fd" class="card" style="width: 100%; max-width: 580px; background: var(--surface-1); padding: 28px; box-sizing: border-box; box-shadow: var(--sombra-elevada); display: flex; flex-direction: column; gap: 20px">
+      <div>
+        <h2 id="fd" style="font-size: 22px; line-height: 28px; font-weight: 650">Fotografia de outubro</h2>
+        <p class="lbl">Valor de mercado de cada posição a 31 out. · Tab passa ao campo seguinte</p>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <div class="linha">
+          <label for="d-iwda"><span style="display: block; font-size: 15px; font-weight: 600">IWDA</span><span class="lbl">set.: 10 540,20 €</span></label>
+          <div class="inp"><input id="d-iwda" inputmode="decimal" autocomplete="off" value="10 652,40"><span>€</span></div>
+        </div>
+        <div class="linha">
+          <label for="d-eimi"><span style="display: block; font-size: 15px; font-weight: 600">EIMI</span><span class="lbl">set.: 868,10 €</span></label>
+          <div class="inp"><input id="d-eimi" inputmode="decimal" autocomplete="off" value="921,35"><span>€</span></div>
+        </div>
+        <div class="linha">
+          <label for="d-def"><span style="display: block; font-size: 15px; font-weight: 600">VanEck Defense</span><span class="lbl">set.: 496,30 €</span></label>
+          <div class="inp"><input id="d-def" inputmode="decimal" autocomplete="off" value="503,10"><span>€</span></div>
+        </div>
+        <div class="linha">
+          <label for="d-dig"><span style="display: block; font-size: 15px; font-weight: 600">iShares Digital Security</span><span class="lbl">set.: 497,80 €</span></label>
+          <div class="inp"><input id="d-dig" class="foco" inputmode="decimal" autocomplete="off" value="509,85"><span>€</span></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; border-top: 1px solid var(--gridline); padding-top: 12px">
+          <span class="lbl">Total ETFs</span><span style="font-size: 15px; font-weight: 600">12 586,70 €</span>
+        </div>
+        <div class="linha">
+          <label for="d-ca"><span style="display: block; font-size: 15px; font-weight: 600">Certificados de Aforro · saldo</span><span class="lbl">set.: 2 100,00 €</span></label>
+          <div class="inp"><input id="d-ca" inputmode="decimal" autocomplete="off" placeholder="2 100,00"><span>€</span></div>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 12px">
+        <button class="btn2" type="button">Cancelar</button>
+        <button class="btn" type="button">Guardar fotografia</button>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["claro","escuro"],"default":"claro"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { tema: (this.props.tema ?? 'claro') === 'escuro' ? 't escuro' : 't' };
+  }
+}
+</script>
+</body>
+</html>

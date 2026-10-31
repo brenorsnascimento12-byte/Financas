@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<title>Estados e variáveis</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+h1,h2,h3,p{margin:0}
+.t{--surface-1:#fcfcfb;--plane:#f9f9f7;--text-primary:#0b0b0b;--text-secondary:#52514e;--text-muted:#898781;--gridline:#e1e0d9;--baseline:#c3c2b7;--border:rgba(11,11,11,.1);--wash:rgba(11,11,11,.04);--serie-1:#2a78d6;--serie-2:#eb6834;--serie-3:#1baf7a;--good:#0ca30c;--success-text:#006300;--warning:#fab219;--critical:#d03b3b;--raio:10px;--sans:system-ui,-apple-system,'Segoe UI',sans-serif;--warning-text:#7a5200;--warning-wash:rgba(250,178,25,.16);--good-wash:rgba(12,163,12,.09);--sombra-elevada:0 10px 28px rgba(11,11,11,.14);--scrim:rgba(11,11,11,.32);font-family:var(--sans);color:var(--text-primary);background:var(--surface-1);font-variant-numeric:tabular-nums}
+.t.escuro{--surface-1:#1a1a19;--plane:#0d0d0d;--text-primary:#fff;--text-secondary:#c3c2b7;--text-muted:#898781;--gridline:#2c2c2a;--baseline:#383835;--border:rgba(255,255,255,.1);--wash:rgba(255,255,255,.05);--serie-1:#3987e5;--serie-2:#d95926;--serie-3:#199e70;--success-text:#0ca30c;--warning-text:#fab219;--warning-wash:rgba(250,178,25,.12);--good-wash:rgba(12,163,12,.14);--sombra-elevada:0 10px 28px rgba(0,0,0,.55);--scrim:rgba(0,0,0,.6)}
+.card{background:var(--plane);border:1px solid var(--border);border-radius:var(--raio)}
+.lbl{font-size:13px;line-height:18px;color:var(--text-secondary)}
+.sec{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;font-size:12px;font-weight:600;white-space:nowrap}
+.ok{color:var(--success-text);background:var(--good-wash)}
+.av{color:var(--warning-text);background:var(--warning-wash)}
+.pill{display:inline-flex;align-items:center;gap:8px;min-height:32px;padding:0 12px;border-radius:16px;font:13px var(--sans);color:var(--text-secondary);background:var(--wash);border:0;cursor:pointer}
+.pill.av{color:var(--warning-text);background:var(--warning-wash);font-weight:500}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;box-sizing:border-box}
+.grip{width:44px;height:44px;flex:none;border:0;background:transparent;color:var(--text-muted);border-radius:8px;display:grid;place-items:center;padding:0}
+table{border-collapse:collapse;width:100%;font-size:13px;line-height:18px}
+th{text-align:left;font-weight:600;color:var(--text-secondary);padding:8px 12px;border-bottom:1px solid var(--baseline)}
+td{padding:8px 12px;border-bottom:1px solid var(--gridline);vertical-align:top}
+code{font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;font-size:12.5px}
+</style>
+</helmet>
+<div class="t" style="width: 1440px; height: 980px; box-sizing: border-box; padding: 40px; display: flex; flex-direction: column; gap: 28px">
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px">
+
+    <div class="t" style="border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 22px; border: 1px solid var(--border)">
+      <p class="sec">Claro</p>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <p class="lbl">Sincronização · do mais calmo ao que pede ação</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px">
+          <button class="pill" type="button"><span class="dot" style="background: var(--good)"></span>Sincronizado há 2 min</button>
+          <button class="pill" type="button"><span class="dot" style="border: 1.5px solid var(--text-secondary)"></span>Sem rede — guardado no aparelho</button>
+          <button class="pill" type="button"><span class="dot" style="border: 2px solid var(--serie-1)"></span>Por sincronizar</button>
+          <button class="pill av" type="button"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2.5v3h-3"></path></svg>Acesso expirado — <span style="text-decoration: underline; text-underline-offset: 2px">renovar</span></button>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <p class="lbl">Estado de uma regra</p>
+        <div style="display: flex; gap: 10px"><span class="chip ok">Dentro</span><span class="chip av">Abaixo</span><span class="chip av">Acima do teto</span></div>
+      </div>
+      <div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 6px">
+        <div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 15px; font-weight: 500">Temáticos</span><span class="chip av">Acima do teto</span></div>
+        <p class="lbl">11,2% da carteira · teto 10%</p>
+        <p style="font-size: 15px; line-height: 21px">Acima do teto — redireciona os aportes para o núcleo.</p>
+      </div>
+      <div style="display: flex; align-items: center; gap: 16px">
+        <p class="lbl">Pega de reordenar:</p>
+        <span class="grip" aria-hidden="true" style="opacity: .55"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.4"></circle><circle cx="11" cy="3" r="1.4"></circle><circle cx="5" cy="8" r="1.4"></circle><circle cx="11" cy="8" r="1.4"></circle><circle cx="5" cy="13" r="1.4"></circle><circle cx="11" cy="13" r="1.4"></circle></svg></span><span class="lbl">repouso</span>
+        <span class="grip" aria-hidden="true" style="background: var(--wash); color: var(--text-secondary)"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.4"></circle><circle cx="11" cy="3" r="1.4"></circle><circle cx="5" cy="8" r="1.4"></circle><circle cx="11" cy="8" r="1.4"></circle><circle cx="5" cy="13" r="1.4"></circle><circle cx="11" cy="13" r="1.4"></circle></svg></span><span class="lbl">cursor por cima</span>
+        <span class="grip" aria-hidden="true" style="background: var(--wash); color: var(--serie-1)"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.4"></circle><circle cx="11" cy="3" r="1.4"></circle><circle cx="5" cy="8" r="1.4"></circle><circle cx="11" cy="8" r="1.4"></circle><circle cx="5" cy="13" r="1.4"></circle><circle cx="11" cy="13" r="1.4"></circle></svg></span><span class="lbl">a mover</span>
+      </div>
+    </div>
+
+    <div class="t escuro" style="border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 22px; border: 1px solid var(--border)">
+      <p class="sec">Escuro</p>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <p class="lbl">Sincronização · do mais calmo ao que pede ação</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px">
+          <button class="pill" type="button"><span class="dot" style="background: var(--good)"></span>Sincronizado há 2 min</button>
+          <button class="pill" type="button"><span class="dot" style="border: 1.5px solid var(--text-secondary)"></span>Sem rede — guardado no aparelho</button>
+          <button class="pill" type="button"><span class="dot" style="border: 2px solid var(--serie-1)"></span>Por sincronizar</button>
+          <button class="pill av" type="button"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2.5v3h-3"></path></svg>Acesso expirado — <span style="text-decoration: underline; text-underline-offset: 2px">renovar</span></button>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <p class="lbl">Estado de uma regra</p>
+        <div style="display: flex; gap: 10px"><span class="chip ok">Dentro</span><span class="chip av">Abaixo</span><span class="chip av">Acima do teto</span></div>
+      </div>
+      <div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 6px">
+        <div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 15px; font-weight: 500">Temáticos</span><span class="chip av">Acima do teto</span></div>
+        <p class="lbl">11,2% da carteira · teto 10%</p>
+        <p style="font-size: 15px; line-height: 21px">Acima do teto — redireciona os aportes para o núcleo.</p>
+      </div>
+      <div style="display: flex; align-items: center; gap: 16px">
+        <p class="lbl">Pega de reordenar:</p>
+        <span class="grip" aria-hidden="true" style="opacity: .55"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.4"></circle><circle cx="11" cy="3" r="1.4"></circle><circle cx="5" cy="8" r="1.4"></circle><circle cx="11" cy="8" r="1.4"></circle><circle cx="5" cy="13" r="1.4"></circle><circle cx="11" cy="13" r="1.4"></circle></svg></span><span class="lbl">repouso</span>
+        <span class="grip" aria-hidden="true" style="background: var(--wash); color: var(--text-secondary)"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.4"></circle><circle cx="11" cy="3" r="1.4"></circle><circle cx="5" cy="8" r="1.4"></circle><circle cx="11" cy="8" r="1.4"></circle><circle cx="5" cy="13" r="1.4"></circle><circle cx="11" cy="13" r="1.4"></circle></svg></span><span class="lbl">cursor por cima</span>
+        <span class="grip" aria-hidden="true" style="background: var(--wash); color: var(--serie-1)"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.4"></circle><circle cx="11" cy="3" r="1.4"></circle><circle cx="5" cy="8" r="1.4"></circle><circle cx="11" cy="8" r="1.4"></circle><circle cx="5" cy="13" r="1.4"></circle><circle cx="11" cy="13" r="1.4"></circle></svg></span><span class="lbl">a mover</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <h2 style="font-size: 20px; font-weight: 600">Variáveis novas propostas</h2>
+    <table>
+      <thead><tr><th>Variável</th><th>Claro</th><th>Escuro</th><th>Porquê</th></tr></thead>
+      <tbody>
+        <tr><td><code>--warning-text</code></td><td><code>#7a5200</code></td><td><code>#fab219</code></td><td>Texto de aviso legível. O <code>--warning</code> (#fab219) sobre fundo claro fica perto de 1,9:1; este passa 4,5:1.</td></tr>
+        <tr><td><code>--warning-wash</code></td><td><code>rgba(250,178,25,.16)</code></td><td><code>rgba(250,178,25,.12)</code></td><td>Fundo suave dos chips «Abaixo/Acima do teto» e do «Acesso expirado». Mesmo matiz do <code>--warning</code>.</td></tr>
+        <tr><td><code>--good-wash</code></td><td><code>rgba(12,163,12,.09)</code></td><td><code>rgba(12,163,12,.14)</code></td><td>Fundo do chip «Dentro», com <code>--success-text</code> por cima.</td></tr>
+        <tr><td><code>--sombra-elevada</code></td><td><code>0 10px 28px rgba(11,11,11,.14)</code></td><td><code>0 10px 28px rgba(0,0,0,.55)</code></td><td>Cartão a ser arrastado e modal.</td></tr>
+        <tr><td><code>--scrim</code></td><td><code>rgba(11,11,11,.32)</code></td><td><code>rgba(0,0,0,.6)</code></td><td>Fundo por trás do modal da fotografia.</td></tr>
+        <tr><td><code>--border</code>, <code>--wash</code>, <code>--text-muted</code> (escuro)</td><td>—</td><td><code>rgba(255,255,255,.1)</code>, <code>rgba(255,255,255,.05)</code>, <code>#898781</code></td><td>Não vinham na lista do escuro; deduzidas. Confirmar.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
