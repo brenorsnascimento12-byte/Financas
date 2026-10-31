@@ -143,6 +143,16 @@ export function mediaMovel(resumos: ResumoMes[], n: number, ate: number): number
   return janela.reduce((s, r) => s + r.gastoTotal, 0) / n
 }
 
+/**
+ * Média da taxa de poupança nos últimos n meses fechados. O mês em curso fica de
+ * fora: a poupança ainda não foi toda transferida e puxaria a média para baixo.
+ */
+export function mediaTaxaPoupanca(resumos: ResumoMes[], n: number): number | null {
+  const fechados = resumos.filter((r) => r.fechado).slice(-n)
+  if (fechados.length === 0) return null
+  return fechados.reduce((s, r) => s + r.taxaPoupanca, 0) / fechados.length
+}
+
 export const precisaRevisao = (o: Orcamento) => o.rendimentoMensal !== o.rendimentoNaRevisao
 
 /** Verdadeiro desde o dia 1 do mês até se registar a primeira fotografia dele. */
@@ -160,28 +170,38 @@ export const totalComprometido = (o: Orcamento) =>
  * com dinheiro já acumulado veria esse saldo inteiro contado como retorno do mercado.
  * O retorno mede-se só a partir dela — o que explica que a primeira linha tenha
  * sempre mercado a zero.
+ *
+ * E mede-se sobre a **carteira** (ETFs mais certificados), não sobre o património
+ * todo. A conta à ordem não rende nada: sobe com o vencimento e desce com as
+ * compras. Contá-la aqui fazia o ordenado aparecer como ganho do mercado e as idas
+ * ao supermercado como perdas — o número media o salário, não o mercado. A liquidez
+ * continua dentro de `total`, que responde a outra pergunta: quanto há ao todo.
  */
 export function evolucaoPatrimonio(o: Orcamento) {
   const saldos = [...o.saldos].sort((a, b) => a.data.localeCompare(b.data))
   const base = saldos[0]
   const totalDe = (s: Saldo) => s.investido + s.liquidez + s.certificados
-  const totalBase = base ? totalDe(base) : 0
+  const carteiraDe = (s: Saldo) => s.investido + s.certificados
+  const carteiraBase = base ? carteiraDe(base) : 0
 
   return saldos.map((s) => {
-    const total = totalDe(s)
+    const carteira = carteiraDe(s)
+    // Só os aportes que foram mesmo para a carteira: uma transferência para a
+    // conta à ordem não é capital investido.
     const aportadoDesdeBase = base
       ? o.aportes
-          .filter((a) => a.data > base.data && a.data <= s.data)
+          .filter((a) => a.destino !== 'liquidez' && a.data > base.data && a.data <= s.data)
           .reduce((acc, a) => acc + a.valor, 0)
       : 0
     return {
       ...s,
-      total,
-      partida: totalBase,
+      total: totalDe(s),
+      carteira,
+      partida: carteiraBase,
       aportadoDesdeBase,
       /** Capital que puseste lá: o ponto de partida mais os aportes desde então. */
-      capital: totalBase + aportadoDesdeBase,
-      mercado: total - totalBase - aportadoDesdeBase,
+      capital: carteiraBase + aportadoDesdeBase,
+      mercado: carteira - carteiraBase - aportadoDesdeBase,
     }
   })
 }

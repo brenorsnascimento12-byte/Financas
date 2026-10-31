@@ -732,16 +732,32 @@ thead th {
 }
 
 .medidor-pista {
+  position: relative;
   height: 8px;
   border-radius: 4px;
   overflow: hidden;
   margin: 6px 0 5px;
+  /* Os medidores do mês passam a cor da fatia em linha; os pesos usam esta. */
+  background: var(--wash);
+}
+
+/* Marca do peso-alvo na pista. Responde a "de que lado do alvo estou?" sem
+   obrigar a comparar o comprimento de duas barras. */
+.marca-alvo {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--text-secondary);
 }
 
 .medidor-barra {
   height: 100%;
   border-radius: 4px;
   transition: width 0.18s ease-out;
+  /* Os medidores do mês passam a cor da fatia em linha; os pesos ficam nesta. */
+  background: var(--serie-1);
 }
 
 .medidor-baixo {
@@ -1433,4 +1449,218 @@ thead th {
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
+}
+
+
+/* ---------- Indicadores de investimento ---------- */
+
+.grelha-indicadores {
+  display: contents;
+}
+
+/* Estado das regras, antes dos números: primeiro "está tudo dentro das regras?". */
+.regras {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.regra {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.regra-marca {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.regra--ok .regra-marca {
+  color: var(--success-text);
+  background: color-mix(in srgb, var(--good) 16%, var(--surface-1));
+}
+
+/* Aviso em tom suave e com texto claro: não é um alarme de mercado. */
+.regra--aviso .regra-marca {
+  color: var(--aviso-texto);
+  background: var(--aviso-fundo);
+}
+
+.regra--aviso {
+  color: var(--text-primary);
+}
+
+.bloco-aportes {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.lista-aportes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lista-aportes li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 7px 0;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.lista-aportes li:last-child {
+  border-bottom: none;
+}
+
+.lista-aportes .num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.aporte-base {
+  font-weight: 400;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* Mini-barras da taxa de poupança, uma por mês. */
+.barras-mes {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 92px;
+  margin: 16px 0 4px;
+}
+
+.barra-mes {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+}
+
+.barra-mes-pista {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  background: var(--wash);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.barra-mes-cheia {
+  width: 100%;
+  background: var(--serie-3);
+  border-radius: 3px;
+}
+
+/* O mês em curso ainda não teve a transferência toda: não se mostra como igual. */
+.barra-mes-cheia--aberta {
+  background: color-mix(in srgb, var(--serie-3) 38%, var(--surface-1));
+}
+
+.barra-mes-rotulo {
+  margin-top: 5px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ordenar {
+  display: flex;
+  gap: 2px;
+}
+
+.ordenar .botao {
+  min-width: 32px;
+  padding: 4px 8px;
+  line-height: 1;
+}
+
+/* ---------- Carteira, nas definições ---------- */
+
+.lista-etfs {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+}
+
+.lista-etfs li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+
+.lista-etfs li > .entrada-inline {
+  grid-column: 1;
+}
+
+.lista-etfs li > .botao--perigo {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.etf-numeros {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+}
+
+.etf-numeros .campo {
+  max-width: 120px;
+}
+
+.lista-etfs li > .grupo-alternar {
+  grid-column: 1 / -1;
+}
+
+.aviso {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--aviso-fundo);
+  border-radius: var(--raio);
+  padding: 10px 12px;
+}
+
+/* ---------- Ecrã grande ---------- */
+
+/* No telemóvel nada muda. A partir de 1024 px há largura para os indicadores
+   lado a lado, que é o que permite vê-los sem rolar. */
+@media (min-width: 1024px) {
+  .app {
+    max-width: 1320px;
+  }
+
+  .grelha-indicadores {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: start;
+    gap: 18px;
+  }
+
+  .grelha-indicadores .cartao {
+    margin: 0;
+  }
 }

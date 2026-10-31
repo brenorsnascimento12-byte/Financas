@@ -73,7 +73,43 @@ export interface Saldo {
   liquidez: number
   /** Certificados de Aforro (IGCP). Crescem por juros, que aparecem como mercado. */
   certificados: number
+  /**
+   * Valor de cada ETF, por id, somando as duas carteiras da corretora. Quando
+   * existe, `investido` é a soma destes valores. As fotografias anteriores aos
+   * indicadores não a têm: ficam com o total e sem detalhe.
+   */
+  carteira?: Record<string, number>
 }
+
+/**
+ * Papel de um ETF nas regras da carteira. O núcleo é 'global' + 'emergentes';
+ * os 'tematico' são os que têm teto.
+ */
+export type PapelEtf = 'global' | 'emergentes' | 'tematico'
+
+/** Um ETF da carteira. O nome, o peso-alvo e o papel são escolhas do utilizador. */
+export interface Etf {
+  id: string
+  nome: string
+  /** Peso-alvo em % do total de ETFs. */
+  pesoAlvo: number
+  /** Aporte mensal base, em euros. É o que se sugere quando está tudo no lugar. */
+  aporteBase: number
+  papel: PapelEtf
+}
+
+/** Configuração da carteira. Tudo editável nas definições, nada no código. */
+export interface Investimentos {
+  etfs: Etf[]
+  /** Teto dos temáticos, em % do total de ETFs. */
+  tetoTematicos: number
+  /** Intervalo aceitável do peso dos emergentes dentro do núcleo, em %. */
+  emergentesMin: number
+  emergentesMax: number
+}
+
+/** Os indicadores da secção Investimentos. A ordem é escolhida pelo utilizador. */
+export type Indicador = 'pesos' | 'poupanca' | 'casamento'
 
 /** Parte da liquidez que já tem dono e não deve contar como disponível. */
 export interface Compromisso {
@@ -150,6 +186,9 @@ export interface Orcamento {
   compromissos: Compromisso[]
   revisoes: Revisao[]
   regras: Regra[]
+  investimentos: Investimentos
+  /** Ordem dos indicadores da secção Investimentos, de cima para baixo. */
+  ordemIndicadores: Indicador[]
   /**
    * Impressões digitais de linhas concretas mandadas ignorar. Distingue-se de
    * uma `Regra` com tipo 'ignorar': a regra silencia todos os movimentos com

@@ -6,9 +6,10 @@ import { alvoPoupanca, faltaFotografiaEsteMes, mesAtual, precisaRevisao, resumir
 import { Mes } from './componentes/Mes'
 import { Rumo } from './componentes/Rumo'
 import { Definicoes } from './componentes/Definicoes'
+import { Investimentos } from './componentes/Investimentos'
 
 type Tema = 'auto' | 'light' | 'dark'
-type Aba = 'mes' | 'rumo' | 'definicoes'
+type Aba = 'mes' | 'rumo' | 'investir' | 'definicoes'
 
 const CHAVE_TEMA = 'financas:tema'
 const NOME_TEMA: Record<Tema, string> = { auto: 'Automático', light: 'Claro', dark: 'Escuro' }
@@ -17,6 +18,7 @@ const temaSeguinte = (t: Tema): Tema => (t === 'auto' ? 'light' : t === 'light' 
 const ABAS: { id: Aba; nome: string }[] = [
   { id: 'mes', nome: 'Mês' },
   { id: 'rumo', nome: 'Rumo' },
+  { id: 'investir', nome: 'Investir' },
   { id: 'definicoes', nome: 'Definições' },
 ]
 
@@ -120,6 +122,14 @@ export default function App() {
           orcamento={estado.orcamento}
           resumos={resumos}
           alvoPoupanca={alvoPoupanca(estado.orcamento)}
+          aoMudar={definirOrcamento}
+        />
+      )}
+
+      {aba === 'investir' && (
+        <Investimentos
+          orcamento={estado.orcamento}
+          resumos={resumos}
           aoMudar={definirOrcamento}
         />
       )}

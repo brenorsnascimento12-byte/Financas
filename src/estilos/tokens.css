@@ -22,6 +22,11 @@
   --warning: #fab219;
   --critical: #d03b3b;
 
+  /* Aviso calmo: fundo quente esbatido e texto escuro legível, em vez de
+     vermelho. O que está acima do teto é um facto a corrigir, não um alarme. */
+  --aviso-fundo: #fdf1d6;
+  --aviso-texto: #6b4a00;
+
   --raio: 10px;
   --sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
@@ -48,6 +53,8 @@
     --serie-3: #199e70;
 
     --success-text: #0ca30c;
+    --aviso-fundo: #3a2e12;
+    --aviso-texto: #f6d38a;
   }
 }
 
@@ -66,6 +73,9 @@
 
   --serie-1: #3987e5;
   --serie-2: #d95926;
+  --serie-3: #199e70;
 
   --success-text: #0ca30c;
+  --aviso-fundo: #3a2e12;
+  --aviso-texto: #f6d38a;
 }

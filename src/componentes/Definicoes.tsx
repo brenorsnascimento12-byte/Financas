@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import type { Categoria, Compromisso, Objetivo, Orcamento } from '../types'
+import type { Categoria, Compromisso, Etf, Objetivo, Orcamento, PapelEtf } from '../types'
 import { alvoPoupanca, mesAtual, precisaRevisao } from '../lib/orcamento'
 import { novoId, lerFicheiro } from '../lib/armazenamento'
 import { eur } from '../lib/formato'
@@ -34,6 +34,16 @@ export function Definicoes({ orcamento, aoMudar, aoExportar }: Props) {
 
   const poupanca = alvoPoupanca(orcamento)
   const somaExcede = orcamento.alvoEssencial + orcamento.alvoNaoEssencial > 100
+
+  const investimentos = orcamento.investimentos
+  const etfs = investimentos.etfs
+  const somaPesos = etfs.reduce((t, e) => t + e.pesoAlvo, 0)
+
+  const atualizarInvestimentos = (patch: Partial<typeof investimentos>) =>
+    aoMudar({ investimentos: { ...investimentos, ...patch } })
+
+  const atualizarEtf = (id: string, patch: Partial<Etf>) =>
+    atualizarInvestimentos({ etfs: etfs.map((e) => (e.id === id ? { ...e, ...patch } : e)) })
 
   const atualizarCategoria = (id: string, patch: Partial<Categoria>) =>
     aoMudar({ categorias: orcamento.categorias.map((c) => (c.id === id ? { ...c, ...patch } : c)) })
@@ -143,8 +153,124 @@ export function Definicoes({ orcamento, aoMudar, aoExportar }: Props) {
       </section>
 
       <details className="dobravel">
-        <summary>Categorias, objetivos e marcos</summary>
+        <summary>Carteira, categorias, objetivos e marcos</summary>
         <div className="dobravel-corpo">
+          <section className="cartao">
+            <h2>Carteira</h2>
+            <p className="rodape" style={{ marginTop: 0 }}>
+              Os ETFs, os pesos-alvo e os aportes base. O núcleo é o global mais os
+              emergentes; os temáticos são os que têm teto.
+            </p>
+
+            <ul className="lista-etfs">
+              {etfs.map((e) => (
+                <li key={e.id}>
+                  <input
+                    className="entrada-inline"
+                    value={e.nome}
+                    aria-label={`Nome do ETF ${e.nome}`}
+                    onChange={(ev) => atualizarEtf(e.id, { nome: ev.target.value })}
+                  />
+                  <div className="etf-numeros">
+                    <Campo
+                      etiqueta="Alvo"
+                      valor={e.pesoAlvo}
+                      sufixo="%"
+                      min={0}
+                      max={100}
+                      aoMudar={(v) => atualizarEtf(e.id, { pesoAlvo: v })}
+                    />
+                    <Campo
+                      etiqueta="Aporte"
+                      valor={e.aporteBase}
+                      sufixo="€"
+                      min={0}
+                      passo={5}
+                      aoMudar={(v) => atualizarEtf(e.id, { aporteBase: v })}
+                    />
+                  </div>
+                  <div className="grupo-alternar">
+                    {(['global', 'emergentes', 'tematico'] as PapelEtf[]).map((papel) => (
+                      <button
+                        key={papel}
+                        type="button"
+                        aria-pressed={e.papel === papel}
+                        onClick={() => atualizarEtf(e.id, { papel })}
+                      >
+                        {papel === 'tematico' ? 'Temático' : papel === 'global' ? 'Global' : 'Emergentes'}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    className="botao botao--discreto botao--perigo"
+                    // O último não se apaga: sem ETFs não há onde registar a
+                    // fotografia da carteira.
+                    disabled={etfs.length === 1}
+                    onClick={() =>
+                      atualizarInvestimentos({ etfs: etfs.filter((x) => x.id !== e.id) })
+                    }
+                    aria-label={`Remover ${e.nome}`}
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            {Math.abs(somaPesos - 100) > 0.01 && (
+              <p className="aviso">
+                Os pesos-alvo somam {somaPesos}%, não 100%. Os pesos de cada ETF continuam a
+                ser comparados com o alvo que puseste, mas a soma não fecha.
+              </p>
+            )}
+
+            <button
+              type="button"
+              className="botao"
+              onClick={() =>
+                atualizarInvestimentos({
+                  etfs: [
+                    ...etfs,
+                    { id: novoId(), nome: 'Novo ETF', pesoAlvo: 0, aporteBase: 0, papel: 'tematico' },
+                  ],
+                })
+              }
+            >
+              Adicionar ETF
+            </button>
+
+            <div className="grelha-campos" style={{ marginTop: 18 }}>
+              <Campo
+                etiqueta="Teto dos temáticos"
+                valor={investimentos.tetoTematicos}
+                sufixo="%"
+                min={0}
+                max={100}
+                aoMudar={(v) => atualizarInvestimentos({ tetoTematicos: v })}
+                dica="do total de ETFs"
+              />
+              <Campo
+                etiqueta="Emergentes, mínimo"
+                valor={investimentos.emergentesMin}
+                sufixo="%"
+                min={0}
+                max={100}
+                aoMudar={(v) => atualizarInvestimentos({ emergentesMin: v })}
+                dica="do núcleo"
+              />
+              <Campo
+                etiqueta="Emergentes, máximo"
+                valor={investimentos.emergentesMax}
+                sufixo="%"
+                min={0}
+                max={100}
+                aoMudar={(v) => atualizarInvestimentos({ emergentesMax: v })}
+                dica="do núcleo"
+              />
+            </div>
+          </section>
+
           <section className="cartao">
             <h2>Categorias</h2>
             <ul className="lista-categorias">

@@ -7,8 +7,6 @@ import {
   hojeISO,
   mesAtual,
   nomeMes,
-  objetivoComData,
-  progressoObjetivo,
   totalComprometido,
   ultimoSaldo,
 } from '../lib/orcamento'
@@ -37,13 +35,7 @@ export function Rumo({ orcamento, resumos, alvoPoupanca, aoMudar }: Props) {
   const pontos = useMemo(() => evolucaoPatrimonio(orcamento), [orcamento])
   const atual = pontos.at(-1)
   const pote = useMemo(() => calcularPote(resumos, orcamento.aportes), [resumos, orcamento.aportes])
-  const objetivo = objetivoComData(orcamento)
-  const progresso = useMemo(
-    () => (objetivo ? progressoObjetivo(orcamento, objetivo) : null),
-    [orcamento, objetivo],
-  )
-
-  const [investido, setInvestido] = useState('')
+  const [valoresEtf, setValoresEtf] = useState<Record<string, string>>({})
   const [liquidez, setLiquidez] = useState('')
   const [certificados, setCertificados] = useState('')
   const [dataSaldo, setDataSaldo] = useState(hojeISO())
@@ -55,6 +47,7 @@ export function Rumo({ orcamento, resumos, alvoPoupanca, aoMudar }: Props) {
   const [valorExcedente, setValorExcedente] = useState('')
   const [destinoExcedente, setDestinoExcedente] = useState<Destino>('certificados')
 
+  const etfs = orcamento.investimentos.etfs
   const comprometido = totalComprometido(orcamento)
   const saldo = ultimoSaldo(orcamento)
   const liquidezLivre = saldo ? saldo.liquidez - comprometido : null
@@ -62,17 +55,22 @@ export function Rumo({ orcamento, resumos, alvoPoupanca, aoMudar }: Props) {
   const registarSaldo = (e: React.FormEvent) => {
     e.preventDefault()
     const num = (v: string) => Number(v.replace(',', '.')) || 0
-    if (investido === '' && liquidez === '' && certificados === '') return
+    const algumEtf = etfs.some((etf) => (valoresEtf[etf.id] ?? '') !== '')
+    if (!algumEtf && liquidez === '' && certificados === '') return
+    // A carteira detalhada é a fonte: o investido é a soma dela, para o total do
+    // património e o detalhe por ETF nunca discordarem.
+    const carteira = Object.fromEntries(etfs.map((etf) => [etf.id, num(valoresEtf[etf.id] ?? '')]))
     const novo: Saldo = {
       id: novoId(),
       data: dataSaldo,
-      investido: num(investido),
+      investido: Object.values(carteira).reduce((t, v) => t + v, 0),
       liquidez: num(liquidez),
       certificados: num(certificados),
+      carteira,
     }
     // Uma data só tem uma fotografia: registar de novo substitui.
     aoMudar({ saldos: [...orcamento.saldos.filter((s) => s.data !== dataSaldo), novo] })
-    setInvestido('')
+    setValoresEtf({})
     setLiquidez('')
     setCertificados('')
   }
@@ -109,35 +107,6 @@ export function Rumo({ orcamento, resumos, alvoPoupanca, aoMudar }: Props) {
             Falta a fotografia de {nomeMes(mesAtual()).toLowerCase()}. Vê os saldos na XTB, no
             banco e no IGCP, e regista-os no fecho do mês.
           </p>
-        </section>
-      )}
-
-      {/* O objetivo com data é o que está em jogo: é o número principal do ecrã. */}
-      {progresso && (
-        <section className="cartao cartao--principal">
-          <p className="etiqueta">
-            {progresso.objetivo.nome} · {progresso.objetivo.dataAlvo}
-          </p>
-          <p className="numero-heroi">{eur(progresso.atual)}</p>
-          <p className="sub-heroi">
-            de {eur(progresso.alvo)} · faltam {eur(progresso.falta)} em {progresso.mesesRestantes}{' '}
-            meses
-          </p>
-
-          <div className="barra-alvo">
-            <div className="barra-alvo-cheia" style={{ width: `${progresso.pct * 100}%` }} />
-          </div>
-
-          <p className="accao-mes">
-            Este mês: <strong>{eur(progresso.necessarioMensal)}</strong> para certificados.
-          </p>
-
-          {progresso.emDesvio && (
-            <p className="deriva deriva--sobe">
-              <span aria-hidden="true">▲ </span>
-              Estás a fazer {eur(progresso.ritmoAtual ?? 0)} por mês, abaixo do necessário.
-            </p>
-          )}
         </section>
       )}
 
@@ -201,21 +170,28 @@ export function Rumo({ orcamento, resumos, alvoPoupanca, aoMudar }: Props) {
 
         <form className="registo" onSubmit={registarSaldo}>
           <p className="etiqueta-bloco">Fotografia dos saldos</p>
+          <p className="rodape" style={{ marginTop: -6 }}>
+            O valor de cada ETF é a soma das duas carteiras da XTB.
+          </p>
           <div className="grelha-campos">
-            <div className="campo">
-              <label htmlFor="s-investido">ETFs</label>
-              <div className="campo-entrada">
-                <input
-                  id="s-investido"
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="0"
-                  value={investido}
-                  onChange={(e) => setInvestido(e.target.value)}
-                />
-                <span className="sufixo">€</span>
+            {etfs.map((etf) => (
+              <div className="campo" key={etf.id}>
+                <label htmlFor={`s-etf-${etf.id}`}>{etf.nome}</label>
+                <div className="campo-entrada">
+                  <input
+                    id={`s-etf-${etf.id}`}
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="0"
+                    value={valoresEtf[etf.id] ?? ''}
+                    onChange={(e) =>
+                      setValoresEtf((v) => ({ ...v, [etf.id]: e.target.value }))
+                    }
+                  />
+                  <span className="sufixo">€</span>
+                </div>
               </div>
-            </div>
+            ))}
             <div className="campo">
               <label htmlFor="s-certificados">Certificados</label>
               <div className="campo-entrada">

@@ -3,7 +3,8 @@ import { dataCurta, eur } from '../lib/formato'
 
 export interface PontoPatrimonio {
   data: string
-  total: number
+  /** ETFs mais certificados: o que rende. A liquidez não entra. */
+  carteira: number
   investido: number
   liquidez: number
   capital: number
@@ -65,7 +66,7 @@ export function GraficoPatrimonio({ pontos }: Props) {
 
   const altura = largura < 440 ? 220 : 280
   const escala = useMemo(() => {
-    const valores = pontos.flatMap((p) => [p.total, p.capital])
+    const valores = pontos.flatMap((p) => [p.carteira, p.capital])
     const min = Math.min(...valores)
     const max = Math.max(...valores, 1)
     // Linha de evolução, não barras: forçar o zero esmagaria a variação contra o
@@ -111,7 +112,7 @@ export function GraficoPatrimonio({ pontos }: Props) {
         <div className="legenda">
           <span className="legenda-item">
             <span className="chave-linha" style={{ background: 'var(--serie-1)' }} />
-            Património
+            Carteira
           </span>
           <span className="legenda-item">
             <span className="chave-linha" style={{ background: 'var(--serie-2)' }} />
@@ -126,7 +127,7 @@ export function GraficoPatrimonio({ pontos }: Props) {
           height={altura}
           viewBox={`0 0 ${largura} ${altura}`}
           role="img"
-          aria-label="Evolução do património face ao total aportado. Valores exatos na tabela abaixo."
+          aria-label="Evolução da carteira face ao capital aportado. Valores exatos na tabela abaixo."
           onPointerMove={aoMover}
           onPointerLeave={() => setAtivo(null)}
         >
@@ -165,7 +166,7 @@ export function GraficoPatrimonio({ pontos }: Props) {
 
           {/* A diferença entre as duas linhas é o que o mercado deu ou tirou. */}
           <path
-            d={`${caminho((q) => q.total)} ${pontos
+            d={`${caminho((q) => q.carteira)} ${pontos
               .map((q, i) => ({ q, i }))
               .reverse()
               .map(({ q, i }) => `L${x(i).toFixed(1)},${y(q.capital).toFixed(1)}`)
@@ -183,7 +184,7 @@ export function GraficoPatrimonio({ pontos }: Props) {
             strokeLinecap="round"
           />
           <path
-            d={caminho((q) => q.total)}
+            d={caminho((q) => q.carteira)}
             fill="none"
             stroke="var(--serie-1)"
             strokeWidth={2}
@@ -195,7 +196,7 @@ export function GraficoPatrimonio({ pontos }: Props) {
             <circle
               key={q.data + i}
               cx={x(i)}
-              cy={y(q.total)}
+              cy={y(q.carteira)}
               r={4.5}
               fill="var(--serie-1)"
               stroke="var(--surface-1)"
@@ -246,9 +247,9 @@ export function GraficoPatrimonio({ pontos }: Props) {
             <div className="dica-linha">
               <span className="nome">
                 <span className="chave-linha" style={{ background: 'var(--serie-1)' }} />
-                Património
+                Carteira
               </span>
-              <span className="num">{eur(p.total)}</span>
+              <span className="num">{eur(p.carteira)}</span>
             </div>
             <div className="dica-linha">
               <span className="nome">
