@@ -238,6 +238,7 @@ export default function App() {
           orcamento={estado.orcamento}
           resumos={resumos}
           aoMudar={definirOrcamento}
+          aoRegistarFotografia={() => setAba('rumo')}
         />
       )}
 

@@ -1576,14 +1576,6 @@ thead th {
   background: color-mix(in srgb, var(--serie-3) 38%, var(--surface-1));
 }
 
-.barra-mes-rotulo {
-  margin-top: 5px;
-  text-align: center;
-  font-size: 10px;
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
 .ordenar {
   display: flex;
   gap: 2px;
@@ -1759,4 +1751,56 @@ thead th {
 
 .conta-despesas--vazia {
   color: var(--text-muted);
+}
+
+/* Extremos e média, em vez de um rótulo por baixo de cada uma das doze barras. */
+.eixo-meses {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.eixo-media {
+  color: var(--text-secondary);
+}
+
+/* ---------- Reordenar os indicadores ---------- */
+
+.estado-arrasto {
+  margin: -4px 0 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.estado-arrasto .botao {
+  padding: 2px 8px;
+  min-height: 0;
+}
+
+/* A pega tem de receber o gesto em vez de o browser rolar a página com ele. */
+.pega {
+  cursor: grab;
+  touch-action: none;
+  letter-spacing: -1px;
+}
+
+.pega:active {
+  cursor: grabbing;
+}
+
+/* Encolhidos enquanto se arrasta: os três cabem no ecrã e não é preciso rolar
+   com o dedo em baixo. */
+.cartao--encolhido {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.cartao--a-mover {
+  box-shadow: var(--sombra-elevada);
+  border-color: var(--serie-1);
 }

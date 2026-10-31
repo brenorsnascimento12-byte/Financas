@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Indicador, Orcamento, ResumoMes } from '../types'
 import {
   mediaTaxaPoupanca,
@@ -13,6 +13,8 @@ interface Props {
   orcamento: Orcamento
   resumos: ResumoMes[]
   aoMudar: (patch: Partial<Orcamento>) => void
+  /** Leva ao sítio onde a fotografia se regista, que vive no Rumo. */
+  aoRegistarFotografia: () => void
 }
 
 const TITULO: Record<Indicador, string> = {
@@ -109,7 +111,20 @@ function Regra({
 function PainelRegras({ orcamento }: { orcamento: Orcamento }) {
   const pesos = useMemo(() => pesosCarteira(orcamento), [orcamento])
   const { tetoTematicos, emergentesMin, emergentesMax, etfs } = orcamento.investimentos
-  if (!pesos) return null
+
+  // Sem fotografia as regras não desaparecem: ficam à vista, por avaliar, para
+  // se saber que existem antes de haver números.
+  if (!pesos) {
+    return (
+      <section className="cartao painel-regras">
+        <p className="regras-veredito">Regras por avaliar</p>
+        <p className="regras-sub">
+          Temáticos ≤ {tetoTematicos}% · emergentes no núcleo {emergentesMin}–{emergentesMax}%.
+          Avaliadas na primeira fotografia.
+        </p>
+      </section>
+    )
+  }
 
   const temBanda = pesos.emergentesNucleo !== null
   const total = 1 + (temBanda ? 1 : 0)
@@ -162,12 +177,26 @@ function IndicadorPesos({ orcamento }: { orcamento: Orcamento }) {
     pesos?.bandaEmergentes === 'abaixo' || pesos?.bandaEmergentes === 'acima'
   const totalAportes = sugestoes.reduce((t, x) => t + x.valor, 0)
 
+  // Sem fotografia mostram-se os alvos definidos e um traço no lugar do valor:
+  // diz-se o que falta sem fingir que a carteira está no sítio.
   if (!pesos) {
     return (
-      <p className="vazio">
-        Ainda não há uma fotografia com o valor de cada ETF. Regista-a no Rumo, no fecho do
-        mês, e os pesos aparecem aqui.
-      </p>
+      <>
+        <p className="sub-secundario" style={{ marginTop: 0 }}>
+          Alvos definidos · falta o valor atual
+        </p>
+        <ul className="lista-aportes">
+          {orcamento.investimentos.etfs.map((e) => (
+            <li key={e.id}>
+              <span>{e.nome}</span>
+              <span className="num aporte-base">— · alvo {e.pesoAlvo}%</span>
+            </li>
+          ))}
+        </ul>
+        <p className="rodape">
+          Os aportes do mês passam a ser calculados a partir da primeira fotografia.
+        </p>
+      </>
     )
   }
 
@@ -234,16 +263,23 @@ function IndicadorPoupanca({ resumos }: { resumos: ResumoMes[] }) {
 
       <div className="barras-mes" role="img" aria-label="Taxa de poupança dos últimos meses">
         {ultimos.map((r) => (
-          <div className="barra-mes" key={r.mes}>
+          <div className="barra-mes" key={r.mes} title={`${r.mes}: ${pct(r.taxaPoupanca)}`}>
             <div className="barra-mes-pista">
               <div
                 className={`barra-mes-cheia${r.fechado ? '' : ' barra-mes-cheia--aberta'}`}
                 style={{ height: `${Math.max(2, (r.taxaPoupanca / maximo) * 100)}%` }}
               />
             </div>
-            <span className="barra-mes-rotulo">{r.mes.slice(5)}</span>
           </div>
         ))}
+      </div>
+
+      {/* Só os extremos e a média: doze rótulos por baixo de doze barras não se
+          liam no telemóvel e não respondiam a nenhuma pergunta. */}
+      <div className="eixo-meses">
+        <span>{ultimos[0]?.mes.replace('-', '/')}</span>
+        {media !== null && <span className="eixo-media">média {pct(media)}</span>}
+        <span>{ultimos.at(-1)?.mes.replace('-', '/')}</span>
       </div>
 
       {!atual.fechado && (
@@ -277,8 +313,53 @@ function IndicadorCasamento({ orcamento }: { orcamento: Orcamento }) {
   )
 }
 
-export function Investimentos({ orcamento, resumos, aoMudar }: Props) {
-  const ordem = orcamento.ordemIndicadores
+/** Uma linha por indicador, para os três caberem no ecrã enquanto se arrasta. */
+function resumoDe(
+  id: Indicador,
+  orcamento: Orcamento,
+  resumos: ResumoMes[],
+  pesos: ReturnType<typeof pesosCarteira>,
+): string {
+  if (id === 'pesos') {
+    if (!pesos) return 'sem fotografia'
+    const avisos = (pesos.acimaDoTeto ? 1 : 0) + (pesos.bandaEmergentes === 'dentro' ? 0 : 1)
+    const estado = avisos === 0 ? 'dentro das regras' : `${avisos} aviso${avisos > 1 ? 's' : ''}`
+    return `${eur(pesos.totalEtf)} · ${estado}`
+  }
+  if (id === 'poupanca') {
+    const atual = resumos.at(-1)
+    if (!atual) return 'sem meses registados'
+    const media = mediaTaxaPoupanca(resumos, JANELA)
+    return `${pct(atual.taxaPoupanca)}${media === null ? '' : ` · média ${pct(media)}`}`
+  }
+  const objetivo = objetivoComData(orcamento)
+  const progresso = objetivo ? progressoObjetivo(orcamento, objetivo) : null
+  return progresso ? `${eur(progresso.atual)} de ${eur(progresso.alvo)}` : 'sem objetivo'
+}
+
+export function Investimentos({ orcamento, resumos, aoMudar, aoRegistarFotografia }: Props) {
+  const ordemGuardada = orcamento.ordemIndicadores
+  const pesos = useMemo(() => pesosCarteira(orcamento), [orcamento])
+
+  // Enquanto se arrasta, a ordem vive aqui e só se grava ao largar: gravar a
+  // cada pixel percorrido enchia a sincronização de alterações que ninguém fez.
+  const [arrasto, setArrasto] = useState<{ id: Indicador; ordem: Indicador[] } | null>(null)
+  const [desfazer, setDesfazer] = useState<Indicador[] | null>(null)
+  const caixas = useRef<Partial<Record<Indicador, HTMLElement | null>>>({})
+
+  const ordem = arrasto?.ordem ?? ordemGuardada
+  const aArrastar = arrasto !== null
+
+  useEffect(() => {
+    if (desfazer === null) return
+    const t = setTimeout(() => setDesfazer(null), 8000)
+    return () => clearTimeout(t)
+  }, [desfazer])
+
+  const aplicar = (nova: Indicador[]) => {
+    setDesfazer(ordemGuardada)
+    aoMudar({ ordemIndicadores: nova })
+  }
 
   // A ordem é do utilizador porque o que interessa muda com o momento: perto de
   // uma transferência conta a carteira, perto do casamento conta a meta.
@@ -288,47 +369,147 @@ export function Investimentos({ orcamento, resumos, aoMudar }: Props) {
     const nova = [...ordem]
     nova[i] = ordem[j]
     nova[j] = ordem[i]
-    aoMudar({ ordemIndicadores: nova })
+    aplicar(nova)
+  }
+
+  const comecar = (id: Indicador) => (e: React.PointerEvent<HTMLElement>) => {
+    // A captura é o que faz os eventos continuarem a chegar quando o dedo sai
+    // do botão. Se falhar, arrasta-se na mesma enquanto estiver por cima.
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId)
+    } catch {
+      /* ponteiro já libertado */
+    }
+    setArrasto({ id, ordem: [...ordemGuardada] })
+  }
+
+  /** Troca quando o dedo entra na área de outro cartão — em coluna ou em grelha. */
+  const mexer = (e: React.PointerEvent<HTMLElement>) => {
+    if (!arrasto) return
+    const sob = (Object.entries(caixas.current) as [Indicador, HTMLElement | null][]).find(
+      ([, el]) => {
+        if (!el) return false
+        const r = el.getBoundingClientRect()
+        return (
+          e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom
+        )
+      },
+    )
+    if (!sob) return
+    const destino = arrasto.ordem.indexOf(sob[0])
+    if (destino === -1 || destino === arrasto.ordem.indexOf(arrasto.id)) return
+    const nova = arrasto.ordem.filter((x) => x !== arrasto.id)
+    nova.splice(destino, 0, arrasto.id)
+    setArrasto({ ...arrasto, ordem: nova })
+  }
+
+  const largar = () => {
+    if (!arrasto) return
+    if (arrasto.ordem.join() !== ordemGuardada.join()) aplicar(arrasto.ordem)
+    setArrasto(null)
   }
 
   return (
     <>
+      {!pesos && (
+        <section className="cartao">
+          <h2>Ainda sem fotografias</h2>
+          <p className="rodape" style={{ marginTop: 0 }}>
+            Uma vez por mês, regista o valor de cada ETF e o saldo dos Certificados. A partir
+            daí vês os pesos, as regras e o caminho até ao objetivo.
+          </p>
+          <button type="button" className="botao botao--primario" onClick={aoRegistarFotografia}>
+            Registar a primeira fotografia
+          </button>
+        </section>
+      )}
+
       <PainelRegras orcamento={orcamento} />
+
+      {aArrastar && (
+        <p className="estado-arrasto" role="status">
+          A mover {TITULO[arrasto.id]} · posição {ordem.indexOf(arrasto.id) + 1} de {ordem.length}.
+          Larga para guardar.
+        </p>
+      )}
+
+      {!aArrastar && desfazer !== null && (
+        <p className="estado-arrasto" role="status">
+          Ordem guardada ·{' '}
+          <button
+            type="button"
+            className="botao botao--discreto"
+            onClick={() => {
+              aoMudar({ ordemIndicadores: desfazer })
+              setDesfazer(null)
+            }}
+          >
+            Desfazer
+          </button>
+        </p>
+      )}
 
       <div className="grelha-indicadores">
         {ordem.map((id, i) => (
-        <section className="cartao" key={id}>
-          <div className="seccao-topo">
-            <div>
-              <h2>{TITULO[id]}</h2>
-              <p className="sub-titulo-cartao">{SUBTITULO[id]}</p>
+          <section
+            className={`cartao${aArrastar ? ' cartao--encolhido' : ''}${
+              arrasto?.id === id ? ' cartao--a-mover' : ''
+            }`}
+            key={id}
+            ref={(el) => {
+              caixas.current[id] = el
+            }}
+          >
+            <div className="seccao-topo">
+              <div>
+                <h2>{TITULO[id]}</h2>
+                <p className="sub-titulo-cartao">
+                  {aArrastar ? resumoDe(id, orcamento, resumos, pesos) : SUBTITULO[id]}
+                </p>
+              </div>
+              <span className="ordenar">
+                <button
+                  type="button"
+                  className="botao botao--discreto pega"
+                  onPointerDown={comecar(id)}
+                  onPointerMove={mexer}
+                  onPointerUp={largar}
+                  onPointerCancel={largar}
+                  aria-label={`Arrastar ${TITULO[id]}`}
+                >
+                  ⠿
+                </button>
+                <button
+                  type="button"
+                  className="botao botao--discreto"
+                  onClick={() => mover(i, -1)}
+                  disabled={i === 0 || aArrastar}
+                  aria-label={`Mover ${TITULO[id]} para cima`}
+                >
+                  {'↑'}
+                </button>
+                <button
+                  type="button"
+                  className="botao botao--discreto"
+                  onClick={() => mover(i, 1)}
+                  disabled={i === ordem.length - 1 || aArrastar}
+                  aria-label={`Mover ${TITULO[id]} para baixo`}
+                >
+                  {'↓'}
+                </button>
+              </span>
             </div>
-            <span className="ordenar">
-              <button
-                type="button"
-                className="botao botao--discreto"
-                onClick={() => mover(i, -1)}
-                disabled={i === 0}
-                aria-label={`Mover ${TITULO[id]} para cima`}
-              >
-                {'↑'}
-              </button>
-              <button
-                type="button"
-                className="botao botao--discreto"
-                onClick={() => mover(i, 1)}
-                disabled={i === ordem.length - 1}
-                aria-label={`Mover ${TITULO[id]} para baixo`}
-              >
-                {'↓'}
-              </button>
-            </span>
-          </div>
 
-          {id === 'pesos' && <IndicadorPesos orcamento={orcamento} />}
-          {id === 'poupanca' && <IndicadorPoupanca resumos={resumos} />}
-          {id === 'casamento' && <IndicadorCasamento orcamento={orcamento} />}
-        </section>
+            {/* Enquanto se arrasta ficam só os títulos: um cartão de meio ecrã
+                não se consegue arrastar com o polegar num telemóvel. */}
+            {!aArrastar && (
+              <>
+                {id === 'pesos' && <IndicadorPesos orcamento={orcamento} />}
+                {id === 'poupanca' && <IndicadorPoupanca resumos={resumos} />}
+                {id === 'casamento' && <IndicadorCasamento orcamento={orcamento} />}
+              </>
+            )}
+          </section>
         ))}
       </div>
     </>
