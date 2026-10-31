@@ -233,18 +233,27 @@ export async function lerFicheiro(ficheiro: File): Promise<Estado> {
     // Sem mensagens cruas do motor de JavaScript à frente do utilizador.
     throw new Error('O ficheiro está danificado ou não é um JSON válido.')
   }
+  const pareceOrcamento = (o: unknown): o is Orcamento =>
+    !!o &&
+    typeof o === 'object' &&
+    Array.isArray((o as Orcamento).despesas) &&
+    Array.isArray((o as Orcamento).categorias)
+
+  // Duas formas válidas: a exportação da app, que embrulha em `orcamento`, e o
+  // ficheiro do repositório de sincronização, que guarda o orçamento à raiz. É
+  // o que permite recuperar a partir do histórico de commits.
   const candidato = dados as Partial<Estado>
-  if (
-    !candidato ||
-    typeof candidato !== 'object' ||
-    !candidato.orcamento ||
-    !Array.isArray(candidato.orcamento.despesas) ||
-    !Array.isArray(candidato.orcamento.categorias)
-  ) {
+  const orcamento = pareceOrcamento(candidato?.orcamento)
+    ? candidato.orcamento
+    : pareceOrcamento(dados)
+      ? dados
+      : null
+
+  if (orcamento === null) {
     throw new Error('Este ficheiro não parece uma exportação da app.')
   }
   // A mesma migração do arranque: uma cópia antiga tem de continuar a servir.
-  return { orcamento: migrar(candidato.orcamento) }
+  return { orcamento: migrar(orcamento) }
 }
 
 export function exportar(estado: Estado): void {

@@ -30,6 +30,12 @@ const orc = (p: Partial<Orcamento> = {}): Orcamento =>
 const com = (o: Orcamento, alteradoEm: Record<string, string>, apagados: Record<string, string> = {}) =>
   ({ ...o, sincronizacao: { ...o.sincronizacao, alteradoEm, apagados } }) as Orcamento
 
+/** Já sincronizou alguma vez: não cai na pergunta do primeiro contacto. */
+const conhecido = (o: Orcamento): Orcamento => ({
+  ...o,
+  sincronizacao: { ...o.sincronizacao, ultimaSync: '2026-10-25T00:00:00Z' },
+})
+
 describe('marcarAlteracoes', () => {
   it('marca um registo novo', () => {
     const antes = orc()
@@ -206,7 +212,7 @@ describe('sincronizar', () => {
   })
 
   it('junta o que está no repositório com o que está no aparelho', async () => {
-    const local = com(orc({ despesas: [d('a', 1)] }), { a: '2026-10-01T00:00:00Z' })
+    const local = conhecido(com(orc({ despesas: [d('a', 1)] }), { a: '2026-10-01T00:00:00Z' }))
     const remoto = com(orc({ despesas: [d('b', 2)] }), { b: '2026-10-02T00:00:00Z' })
     const buscar = ((_u: string, init?: RequestInit) =>
       Promise.resolve(
@@ -220,7 +226,7 @@ describe('sincronizar', () => {
   })
 
   it('se o outro aparelho escrever a meio, volta a ler e funde em vez de passar por cima', async () => {
-    const local = com(orc({ despesas: [d('a', 1)] }), { a: '2026-10-01T00:00:00Z' })
+    const local = conhecido(com(orc({ despesas: [d('a', 1)] }), { a: '2026-10-01T00:00:00Z' }))
     const remotoTardio = com(orc({ despesas: [d('c', 3)] }), { c: '2026-10-30T00:00:00Z' })
     let puts = 0
     const buscar = ((_u: string, init?: RequestInit) => {
@@ -241,7 +247,7 @@ describe('sincronizar', () => {
   })
 
   it('conflito atrás de conflito desiste, sem apagar nada do aparelho', async () => {
-    const local = com(orc({ despesas: [d('a', 1)] }), { a: '2026-10-01T00:00:00Z' })
+    const local = conhecido(com(orc({ despesas: [d('a', 1)] }), { a: '2026-10-01T00:00:00Z' }))
     const buscar = ((_u: string, init?: RequestInit) =>
       Promise.resolve(
         init?.method === 'PUT' ? new Response(null, { status: 409 }) : respostaLer(orc()),
@@ -286,5 +292,72 @@ describe('alterações locais por enviar', () => {
     const local = com(orc(), { x: '2026-10-01T00:00:00Z' })
     const remoto = com(orc({ despesas: [d('z', 1)] }), { z: '2027-01-01T00:00:00Z' })
     expect(fundir(local, remoto).sincronizacao.alteradoLocalmenteEm).toBeUndefined()
+  })
+})
+
+describe('primeiro contacto de um aparelho com um repositório que já tem dados', () => {
+  const cred2 = { repo: 'breno/dados', token: 't' }
+  const hoje2 = '2026-10-31T12:00:00Z'
+  const servir = (remoto: Orcamento, put: () => Response) =>
+    ((_u: string, init?: RequestInit) =>
+      Promise.resolve(
+        init?.method === 'PUT'
+          ? put()
+          : new Response(JSON.stringify({ content: paraBase64(JSON.stringify(remoto)), sha: 's' }), {
+              status: 200,
+            }),
+      )) as unknown as typeof fetch
+
+  it('recusa juntar, porque uma instalação de raiz traz dados próprios', async () => {
+    // Foi isto que duplicou as categorias: o aparelho novo tinha as suas de
+    // arranque, juntou-as às do outro, e ficaram as duas listas.
+    const novo = com(orc({ categorias: [{ id: 'c1', nome: 'Barbeiro' }] } as never), {
+      c1: '2026-10-31T00:00:00Z',
+    })
+    const remoto = com(orc({ categorias: [{ id: 'c2', nome: 'Barbeiro' }] } as never), {
+      c2: '2026-10-01T00:00:00Z',
+    })
+    await expect(
+      sincronizar(novo, cred2, servir(remoto, () => new Response(null, { status: 200 })), hoje2),
+    ).rejects.toMatchObject({ tipo: 'primeiraVez' })
+  })
+
+  it('deixa juntar quando se pede de propósito', async () => {
+    const novo = com(orc({ despesas: [d('a', 1)] }), { a: '2026-10-31T00:00:00Z' })
+    const remoto = com(orc({ despesas: [d('b', 2)] }), { b: '2026-10-01T00:00:00Z' })
+    const r = await sincronizar(
+      novo,
+      cred2,
+      servir(remoto, () => new Response(JSON.stringify({ content: { sha: 'n' } }), { status: 200 })),
+      hoje2,
+      true,
+    )
+    expect(r.orcamento.despesas).toHaveLength(2)
+  })
+
+  it('um aparelho que já sincronizou antes continua a juntar sem perguntar', async () => {
+    const conhecido = {
+      ...com(orc({ despesas: [d('a', 1)] }), { a: '2026-10-31T00:00:00Z' }),
+    }
+    conhecido.sincronizacao = { ...conhecido.sincronizacao, ultimaSync: '2026-10-30T00:00:00Z' }
+    const remoto = com(orc({ despesas: [d('b', 2)] }), { b: '2026-10-01T00:00:00Z' })
+    const r = await sincronizar(
+      conhecido,
+      cred2,
+      servir(remoto, () => new Response(JSON.stringify({ content: { sha: 'n' } }), { status: 200 })),
+      hoje2,
+    )
+    expect(r.orcamento.despesas).toHaveLength(2)
+  })
+
+  it('com o repositório vazio não há nada a perguntar', async () => {
+    const novo = com(orc({ despesas: [d('a', 1)] }), { a: '2026-10-31T00:00:00Z' })
+    const buscar = ((u: string, init?: RequestInit) =>
+      Promise.resolve(
+        init?.method === 'PUT'
+          ? new Response(JSON.stringify({ content: { sha: 'n' } }), { status: 200 })
+          : new Response(null, { status: u.endsWith('.json') ? 404 : 200 }),
+      )) as unknown as typeof fetch
+    await expect(sincronizar(novo, cred2, buscar, hoje2)).resolves.toBeTruthy()
   })
 })

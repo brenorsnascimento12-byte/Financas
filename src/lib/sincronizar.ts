@@ -206,17 +206,36 @@ export interface ResultadoSync {
  * o GitHub recusa em vez de deixar passar por cima, e voltamos ao princípio com
  * a versão nova — por isso é que uma escrita perdida não existe aqui, só uma
  * fusão a mais.
+ *
+ * Um aparelho que nunca sincronizou e encontra o repositório com dados não funde
+ * sozinho: uma instalação de raiz traz as suas próprias categorias de arranque, e
+ * juntá-las às que já lá estão deixa as duas listas. Pede-se a decisão em vez de
+ * adivinhar — ou se adota o que está no repositório, ou se junta de propósito,
+ * com `permitirJuntar`.
  */
 export async function sincronizar(
   local: Orcamento,
   credenciais: Credenciais,
   buscar: typeof fetch = fetch,
   agora: string = new Date().toISOString(),
+  permitirJuntar = false,
 ): Promise<ResultadoSync> {
   let ultimoErro: unknown
 
   for (let tentativa = 0; tentativa < TENTATIVAS; tentativa++) {
     const remoto = await lerRemoto(credenciais, buscar)
+
+    if (
+      remoto.orcamento !== null &&
+      local.sincronizacao.ultimaSync === undefined &&
+      !permitirJuntar
+    ) {
+      throw new ErroSync(
+        'primeiraVez',
+        'Este aparelho nunca sincronizou e o repositório já tem dados. Traz o que está lá (é o que queres se este aparelho é novo) ou junta as duas versões de propósito.',
+      )
+    }
+
     const juntado = remoto.orcamento === null ? local : fundir(local, remoto.orcamento)
     const podado = podarLapides(juntado, agora, DIAS_LAPIDE)
     const paraGravar: Orcamento = {

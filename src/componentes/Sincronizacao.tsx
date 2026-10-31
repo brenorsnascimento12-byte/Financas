@@ -6,6 +6,8 @@ export type FaseSync = 'inativo' | 'aSincronizar' | 'ok' | 'erro'
 export interface EstadoSync {
   fase: FaseSync
   mensagem?: string
+  /** 'primeiraVez' faz aparecer a escolha, em vez de só a mensagem. */
+  tipo?: string
 }
 
 interface Props {
@@ -17,6 +19,7 @@ interface Props {
   aoMudarToken: (token: string) => void
   aoSincronizar: () => void
   aoTrazer: () => void
+  aoJuntar: () => void
 }
 
 const quandoFoi = (iso: string | undefined) => {
@@ -61,6 +64,7 @@ export function Sincronizacao({
   aoMudarToken,
   aoSincronizar,
   aoTrazer,
+  aoJuntar,
 }: Props) {
   const [aEditarToken, setAEditarToken] = useState(token === '')
   const repo = orcamento.sincronizacao.repo ?? ''
@@ -137,6 +141,19 @@ export function Sincronizacao({
       </div>
 
       {estado.fase === 'erro' && estado.mensagem && <p className="aviso">{estado.mensagem}</p>}
+
+      {/* Juntar às cegas no primeiro contacto é o que duplica as categorias de
+          arranque: aqui a escolha é explícita, com a opção segura em primeiro. */}
+      {estado.tipo === 'primeiraVez' && (
+        <div className="registo-linha" style={{ marginTop: 10 }}>
+          <button type="button" className="botao botao--primario" onClick={aoTrazer}>
+            Trazer do repositório
+          </button>
+          <button type="button" className="botao" onClick={aoJuntar}>
+            Juntar as duas versões
+          </button>
+        </div>
+      )}
 
       <details className="dobravel" style={{ marginTop: 14 }}>
         <summary>Montar este aparelho de raiz</summary>

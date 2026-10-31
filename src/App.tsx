@@ -73,14 +73,20 @@ export default function App() {
       orcamento: marcarAlteracoes(e.orcamento, { ...e.orcamento, ...patch }, new Date().toISOString()),
     }))
 
-  const sincronizarAgora = useCallback(async () => {
+  const sincronizarAgora = useCallback(async (permitirJuntar = false) => {
     const atual = orcamentoRef.current
     const repo = atual.sincronizacao.repo
     const guardado = lerToken()
     if (!repo || !guardado) return
     setSync({ fase: 'aSincronizar' })
     try {
-      const r = await sincronizar(atual, { repo, token: guardado })
+      const r = await sincronizar(
+        atual,
+        { repo, token: guardado },
+        fetch,
+        new Date().toISOString(),
+        permitirJuntar,
+      )
       // O resultado da fusão não volta a passar por `marcarAlteracoes`: o que
       // veio do outro aparelho não foi alterado aqui.
       setEstado((e) => ({ ...e, orcamento: r.orcamento }))
@@ -89,6 +95,7 @@ export default function App() {
       setSync({
         fase: 'erro',
         mensagem: e instanceof ErroSync ? e.message : 'Não foi possível sincronizar.',
+        tipo: e instanceof ErroSync ? e.tipo : undefined,
       })
     }
   }, [])
@@ -129,7 +136,7 @@ export default function App() {
   // Ao abrir, e outra vez quando a rede voltar.
   useEffect(() => {
     void sincronizarAgora()
-    const aoVoltarARede = () => void sincronizarAgora()
+    const aoVoltarARede = () => void sincronizarAgora(false)
     window.addEventListener('online', aoVoltarARede)
     return () => window.removeEventListener('online', aoVoltarARede)
   }, [sincronizarAgora])
@@ -248,6 +255,7 @@ export default function App() {
           }}
           aoSincronizar={() => void sincronizarAgora()}
           aoTrazer={() => void trazerDoRepositorio()}
+          aoJuntar={() => void sincronizarAgora(true)}
         />
       )}
 

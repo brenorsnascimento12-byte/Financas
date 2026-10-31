@@ -1747,3 +1747,16 @@ thead th {
 .seccao-topo > div > h2 {
   margin: 0;
 }
+
+/* Quantas despesas pendem de uma categoria. A que está a zero é a que se pode
+   apagar sem arrastar histórico — é por aí que se desfaz uma duplicação. */
+.conta-despesas {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.conta-despesas--vazia {
+  color: var(--text-muted);
+}

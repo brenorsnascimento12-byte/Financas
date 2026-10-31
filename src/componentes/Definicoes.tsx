@@ -16,6 +16,7 @@ interface Props {
   aoMudarToken: (token: string) => void
   aoSincronizar: () => void
   aoTrazer: () => void
+  aoJuntar: () => void
 }
 
 export function Definicoes({
@@ -28,6 +29,7 @@ export function Definicoes({
   aoMudarToken,
   aoSincronizar,
   aoTrazer,
+  aoJuntar,
 }: Props) {
   const [novaCategoria, setNovaCategoria] = useState('')
   const [novoObjetivo, setNovoObjetivo] = useState('')
@@ -61,6 +63,17 @@ export function Definicoes({
 
   const atualizarEtf = (id: string, patch: Partial<Etf>) =>
     atualizarInvestimentos({ etfs: etfs.map((e) => (e.id === id ? { ...e, ...patch } : e)) })
+
+  /**
+   * Quantas despesas pendem de cada categoria.
+   *
+   * Serve para se poder apagar uma categoria duplicada sem arrastar histórico
+   * com ela: a que não tem movimentos nenhuns é a que se pode tirar.
+   */
+  const despesasPorCategoria = orcamento.despesas.reduce<Record<string, number>>((m, d) => {
+    m[d.categoriaId] = (m[d.categoriaId] ?? 0) + 1
+    return m
+  }, {})
 
   const atualizarCategoria = (id: string, patch: Partial<Categoria>) =>
     aoMudar({ categorias: orcamento.categorias.map((c) => (c.id === id ? { ...c, ...patch } : c)) })
@@ -180,6 +193,7 @@ export function Definicoes({
         aoMudarToken={aoMudarToken}
         aoSincronizar={aoSincronizar}
         aoTrazer={aoTrazer}
+        aoJuntar={aoJuntar}
       />
 
       <details className="dobravel">
@@ -312,6 +326,11 @@ export function Definicoes({
                     aria-label={`Nome da categoria ${c.nome}`}
                     onChange={(e) => atualizarCategoria(c.id, { nome: e.target.value })}
                   />
+                  <span
+                    className={`conta-despesas${(despesasPorCategoria[c.id] ?? 0) === 0 ? ' conta-despesas--vazia' : ''}`}
+                  >
+                    {despesasPorCategoria[c.id] ?? 0} despesas
+                  </span>
                   <div className="grupo-alternar">
                     <button
                       type="button"

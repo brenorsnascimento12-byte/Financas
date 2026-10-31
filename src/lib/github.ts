@@ -11,7 +11,7 @@ export interface Credenciais {
   token: string
 }
 
-export type TipoErro = 'repo' | 'acesso' | 'conflito' | 'rede' | 'formato'
+export type TipoErro = 'repo' | 'acesso' | 'conflito' | 'rede' | 'formato' | 'primeiraVez'
 
 /**
  * Erro com um tipo que quem chama consegue tratar, e uma mensagem já escrita

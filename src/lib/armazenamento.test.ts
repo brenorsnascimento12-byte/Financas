@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Orcamento } from '../types'
-import { migrar, orcamentoInicial } from './armazenamento'
+import { lerFicheiro, migrar, orcamentoInicial } from './armazenamento'
 
 describe('orcamentoInicial', () => {
   it('traz as listas novas vazias', () => {
@@ -86,5 +86,33 @@ describe('marcas de sincronização na migração', () => {
       sincronizacao: { alteradoEm: { d1: '2026-10-10T00:00:00Z' }, apagados: {} },
     } as unknown as Partial<Orcamento>
     expect(migrar(comMarcas).sincronizacao.alteradoEm).toEqual({ d1: '2026-10-10T00:00:00Z' })
+  })
+})
+
+describe('lerFicheiro', () => {
+  const ficheiro = (conteudo: unknown) =>
+    new File([JSON.stringify(conteudo)], 'copia.json', { type: 'application/json' })
+
+  const orcamentoMinimo = { despesas: [], categorias: [{ id: 'c', nome: 'X', fatia: 'essencial' }] }
+
+  it('lê uma exportação da app', async () => {
+    const e = await lerFicheiro(ficheiro({ orcamento: orcamentoMinimo }))
+    expect(e.orcamento.categorias[0].nome).toBe('X')
+  })
+
+  it('lê também o ficheiro do repositório, que guarda o orçamento à raiz', async () => {
+    // É o que permite recuperar a partir do histórico de commits da
+    // sincronização. Sem isto, a cópia que lá está não se conseguia importar.
+    const e = await lerFicheiro(ficheiro(orcamentoMinimo))
+    expect(e.orcamento.categorias[0].nome).toBe('X')
+  })
+
+  it('recusa um ficheiro que não é nenhum dos dois', async () => {
+    await expect(lerFicheiro(ficheiro({ outra: 'coisa' }))).rejects.toThrow(/exportação da app/)
+  })
+
+  it('recusa um ficheiro danificado sem mostrar o erro do motor', async () => {
+    const mau = new File(['{{{'], 'copia.json')
+    await expect(lerFicheiro(mau)).rejects.toThrow(/danificado|JSON válido/)
   })
 })
